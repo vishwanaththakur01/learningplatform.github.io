@@ -1,0 +1,267 @@
+{% extends 'admin/base.html' %} {% block title %}New Quiz · Admin · LearnAI{%
+endblock %} {% block page_title %}Create Quiz{% endblock %} {% block
+topbar_actions %}
+<a href="{{ url_for('admin_quizzes') }}" class="btn btn-secondary btn-sm"
+  ><i class="fa fa-arrow-left"></i> Back</a
+>
+{% endblock %} {% block head %}
+<style>
+  .quiz-builder {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    align-items: start;
+  }
+  .questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .q-builder-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .q-builder-head {
+    padding: 14px 18px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  .q-builder-body {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .remove-q-btn {
+    background: none;
+    border: none;
+    color: var(--red);
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .add-q-btn {
+    border: 2px dashed var(--border);
+    background: none;
+    color: var(--muted);
+    padding: 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .add-q-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .options-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .option-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .option-row input {
+    flex: 1;
+  }
+  .remove-opt {
+    background: none;
+    border: none;
+    color: var(--red);
+    cursor: pointer;
+  }
+</style>
+{% endblock %} {% block admin_content %}
+<form method="POST" id="quizForm">
+  <div class="quiz-builder">
+    <!-- Questions section -->
+    <div>
+      <h2
+        style="
+          font-family: var(--font-head);
+          font-weight: 800;
+          margin-bottom: 20px;
+        "
+      >
+        <i
+          class="fa fa-circle-question"
+          style="color: var(--accent); margin-right: 8px"
+        ></i
+        >Questions
+      </h2>
+      <div class="questions-list" id="questionsList"></div>
+      <button type="button" class="add-q-btn" onclick="addQuestion()">
+        <i class="fa fa-plus"></i> Add Question
+      </button>
+    </div>
+
+    <!-- Settings sidebar -->
+    <div class="card card-pad" style="position: sticky; top: 80px">
+      <h3
+        style="
+          font-family: var(--font-head);
+          font-weight: 700;
+          margin-bottom: 18px;
+        "
+      >
+        <i
+          class="fa fa-sliders"
+          style="color: var(--accent); margin-right: 8px"
+        ></i
+        >Quiz Settings
+      </h3>
+      <div class="form-group">
+        <label class="form-label">Quiz Title *</label>
+        <input
+          class="form-input"
+          type="text"
+          name="title"
+          required
+          placeholder="e.g. Python Basics Quiz"
+        />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea
+          class="form-textarea"
+          name="description"
+          rows="3"
+          placeholder="Brief description…"
+        ></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Course *</label>
+        <select class="form-select" name="course_id" required>
+          <option value="">Select course…</option>
+          {% for c in courses %}
+          <option value="{{ c.id }}">{{ c.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Time Limit (seconds)</label>
+        <input
+          class="form-input"
+          type="number"
+          name="time_limit"
+          value="600"
+          min="60"
+          max="7200"
+        />
+        <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px">
+          600 = 10 minutes
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pass Score (%)</label>
+        <input
+          class="form-input"
+          type="number"
+          name="pass_score"
+          value="70"
+          min="0"
+          max="100"
+        />
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%">
+        <i class="fa fa-save"></i> Save Quiz
+      </button>
+    </div>
+  </div>
+</form>
+{% endblock %} {% block scripts %}
+<script>
+  let qCount = 0;
+
+  function addQuestion() {
+    qCount++;
+    const idx = qCount;
+    const el = document.createElement("div");
+    el.className = "q-builder-card";
+    el.id = `qblock${idx}`;
+    el.innerHTML = `
+      <div class="q-builder-head">
+        <span>Question ${idx}</span>
+        <button type="button" class="remove-q-btn" onclick="removeQ(${idx})"><i class="fa fa-trash"></i></button>
+      </div>
+      <div class="q-builder-body">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Question Text *</label>
+          <textarea class="form-textarea" name="q_text[]" rows="2" required placeholder="Enter the question…"></textarea>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Type</label>
+          <select class="form-select" name="q_type[]" onchange="updateType(this, ${idx})">
+            <option value="multiple_choice">Multiple Choice</option>
+            <option value="true_false">True / False</option>
+            <option value="short_answer">Short Answer</option>
+          </select>
+        </div>
+        <div id="optArea${idx}" class="form-group" style="margin:0;">
+          <label class="form-label">Options <button type="button" onclick="addOpt(${idx})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:.8rem;margin-left:6px;"><i class="fa fa-plus"></i> Add</button></label>
+          <div class="options-editor" id="opts${idx}">
+            <div class="option-row"><input class="form-input" type="text" placeholder="Option A" /><button type="button" class="remove-opt" onclick="this.parentNode.remove()"><i class="fa fa-xmark"></i></button></div>
+            <div class="option-row"><input class="form-input" type="text" placeholder="Option B" /><button type="button" class="remove-opt" onclick="this.parentNode.remove()"><i class="fa fa-xmark"></i></button></div>
+          </div>
+          <input type="hidden" name="q_options[]" id="hiddenOpts${idx}" />
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Correct Answer *</label>
+          <input class="form-input" type="text" name="q_answer[]" required placeholder="Exact correct answer text" />
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Explanation (optional)</label>
+          <input class="form-input" type="text" name="q_explain[]" placeholder="Why this is the answer…" />
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">Points</label>
+          <input class="form-input" type="number" name="q_points[]" value="1" min="1" max="10" style="width:80px;" />
+        </div>
+      </div>`;
+    document.getElementById("questionsList").appendChild(el);
+  }
+
+  function removeQ(idx) {
+    document.getElementById(`qblock${idx}`)?.remove();
+  }
+
+  function addOpt(idx) {
+    const row = document.createElement("div");
+    row.className = "option-row";
+    row.innerHTML = `<input class="form-input" type="text" placeholder="Option" /><button type="button" class="remove-opt" onclick="this.parentNode.remove()"><i class="fa fa-xmark"></i></button>`;
+    document.getElementById(`opts${idx}`).appendChild(row);
+  }
+
+  function updateType(sel, idx) {
+    const area = document.getElementById(`optArea${idx}`);
+    area.style.display = sel.value === "multiple_choice" ? "" : "none";
+  }
+
+  // Serialize options into hidden fields before submit
+  document.getElementById("quizForm").addEventListener("submit", function () {
+    for (let i = 1; i <= qCount; i++) {
+      const opts = document.querySelectorAll(`#opts${i} input[type=text]`);
+      const hidden = document.getElementById(`hiddenOpts${i}`);
+      if (opts && hidden) {
+        hidden.value = JSON.stringify(
+          [...opts].map((o) => o.value).filter(Boolean),
+        );
+      }
+    }
+  });
+
+  // Add first question by default
+  addQuestion();
+</script>
+{% endblock %}

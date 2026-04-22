@@ -1,0 +1,224 @@
+{% extends 'admin/base.html' %} {% block title %}Users · Admin · LearnAI{%
+endblock %} {% block page_title %}User Management{% endblock %} {% block
+topbar_actions %}
+<a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm">
+  <i class="fa fa-arrow-left"></i> Dashboard
+</a>
+{% endblock %} {% block admin_content %}
+
+<!-- Search -->
+<form method="GET" style="display: flex; gap: 10px; margin-bottom: 20px">
+  <input
+    class="form-input"
+    type="search"
+    name="q"
+    value="{{ query or '' }}"
+    placeholder="Search by name or email…"
+    style="max-width: 360px"
+  />
+  <button type="submit" class="btn btn-primary">Search</button>
+  {% if query %}
+  <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">Clear</a>
+  {% endif %}
+</form>
+
+<div class="card" style="overflow: hidden">
+  <div
+    style="
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    "
+  >
+    <div style="font-family: var(--font-head); font-weight: 700">All Users</div>
+    <span class="badge badge-blue"
+      >{{ users.total if users else 0 }} total</span
+    >
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Level</th>
+        <th>Points</th>
+        <th>Joined</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users.items %}
+      <tr id="urow{{ user.id }}">
+        <td style="color: var(--muted)">{{ user.id }}</td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 10px">
+            <div
+              style="
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                background: linear-gradient(
+                  135deg,
+                  var(--accent),
+                  var(--accent2)
+                );
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: 0.8rem;
+                color: #fff;
+              "
+            >
+              {{ user.name[0].upper() if user.name else '?' }}
+            </div>
+            <div>
+              <div style="font-weight: 600; font-size: 0.88rem">
+                {{ user.name or 'Unknown' }}
+              </div>
+              {% if user.is_admin %}
+              <div style="font-size: 0.7rem; color: var(--yellow)">Admin</div>
+              {% endif %}
+            </div>
+          </div>
+        </td>
+        <td style="color: var(--muted); font-size: 0.85rem">
+          {{ user.email or 'No email' }}
+        </td>
+        <td>
+          <span class="badge badge-blue"
+            >{{ user.current_level or 'N/A' }}</span
+          >
+        </td>
+        <td
+          style="
+            font-family: var(--font-head);
+            font-weight: 700;
+            color: var(--accent);
+          "
+        >
+          {{ user.points or 0 }}
+        </td>
+        <td style="color: var(--muted); font-size: 0.82rem">
+          {{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A'
+          }}
+        </td>
+        <td>
+          {% if user.is_active %}
+          <span class="badge badge-green">
+            <i class="fa fa-circle" style="font-size: 0.5rem"></i> Active
+          </span>
+          {% else %}
+          <span class="badge badge-red">
+            <i class="fa fa-circle" style="font-size: 0.5rem"></i> Inactive
+          </span>
+          {% endif %}
+        </td>
+        <td>
+          <div style="display: flex; gap: 6px">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm btn-icon"
+              title="Toggle Admin"
+              onclick="toggleAdmin({{ user.id }})"
+            >
+              <i class="fa fa-shield-halved"></i>
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm btn-icon"
+              title="Toggle Active"
+              onclick="toggleActive({{ user.id }})"
+            >
+              <i class="fa fa-power-off"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td
+          colspan="8"
+          style="text-align: center; padding: 20px; color: var(--muted)"
+        >
+          No users found.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if users and users.pages > 1 %}
+<div class="pagination">
+  <a
+    class="page-btn {% if not users.has_prev %}disabled{% endif %}"
+    href="?page={{ users.prev_num }}&q={{ query or '' }}"
+  >
+    <i class="fa fa-chevron-left"></i>
+  </a>
+
+  {% for p in users.iter_pages() %} {% if p %}
+  <a
+    class="page-btn {% if p == users.page %}active{% endif %}"
+    href="?page={{ p }}&q={{ query or '' }}"
+    >{{ p }}</a
+  >
+  {% else %}
+  <span style="padding: 0 4px; color: var(--muted)">…</span>
+  {% endif %} {% endfor %}
+
+  <a
+    class="page-btn {% if not users.has_next %}disabled{% endif %}"
+    href="?page={{ users.next_num }}&q={{ query or '' }}"
+  >
+    <i class="fa fa-chevron-right"></i>
+  </a>
+</div>
+{% endif %} {% endblock %} {% block scripts %}
+<script>
+  async function apiPost(url) {
+    const res = await fetch(url, { method: "POST" });
+    const text = await res.text();
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { error: text || `HTTP ${res.status}` };
+    }
+
+    if (!res.ok) {
+      throw new Error(data.error || `Request failed with status ${res.status}`);
+    }
+
+    return data;
+  }
+
+  async function toggleAdmin(uid) {
+    try {
+      const data = await apiPost(`/admin/users/${uid}/toggle-admin`);
+      if (data.success) {
+        location.reload();
+      }
+    } catch (err) {
+      alert(err.message || "Error updating user");
+    }
+  }
+
+  async function toggleActive(uid) {
+    try {
+      const data = await apiPost(`/admin/users/${uid}/toggle-active`);
+      if (data.success) {
+        location.reload();
+      }
+    } catch (err) {
+      alert(err.message || "Error updating user");
+    }
+  }
+</script>
+{% endblock %}

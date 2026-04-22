@@ -1,0 +1,100 @@
+{% extends 'admin/base.html' %} {% block title %}Quizzes · Admin · LearnAI{%
+endblock %} {% block page_title %}Quiz Management{% endblock %} {% block
+topbar_actions %}
+<a href="{{ url_for('admin_new_quiz') }}" class="btn btn-primary btn-sm"
+  ><i class="fa fa-plus"></i> New Quiz</a
+>
+<a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm"
+  ><i class="fa fa-arrow-left"></i> Dashboard</a
+>
+{% endblock %} {% block admin_content %}
+<div class="card" style="overflow: hidden">
+  <div
+    style="
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    "
+  >
+    <div style="font-family: var(--font-head); font-weight: 700">
+      All Quizzes
+    </div>
+    <span class="badge badge-blue">{{ quizzes|length }} total</span>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Course</th>
+        <th>Questions</th>
+        <th>Pass Score</th>
+        <th>Time</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for quiz in quizzes %}
+      <tr>
+        <td>
+          <div style="font-weight: 600">{{ quiz.title }}</div>
+          {% if quiz.description %}
+          <div style="font-size: 0.75rem; color: var(--muted)">
+            {{ quiz.description[:60] }}…
+          </div>
+          {% endif %}
+        </td>
+        <td><span class="badge badge-purple">{{ quiz.course_id }}</span></td>
+        <td style="font-family: var(--font-head); font-weight: 700">
+          {{ quiz.questions|length }}
+        </td>
+        <td>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div class="progress-bar" style="width: 60px">
+              <div
+                class="progress-fill"
+                style="width:{{ quiz.pass_score }}%;"
+              ></div>
+            </div>
+            <span style="font-size: 0.82rem">{{ quiz.pass_score }}%</span>
+          </div>
+        </td>
+        <td style="color: var(--muted); font-size: 0.85rem">
+          <i class="fa fa-clock" style="margin-right: 4px"></i>{{
+          quiz.time_limit // 60 }}m
+        </td>
+        <td style="color: var(--muted); font-size: 0.82rem">
+          {{ quiz.created_at.strftime('%b %d, %Y') }}
+        </td>
+        <td>
+          <form
+            method="POST"
+            action="{{ url_for('admin_delete_quiz', quiz_id=quiz.id) }}"
+            onsubmit="return confirm('Delete quiz?');"
+            style="display: inline"
+          >
+            <button type="submit" class="btn btn-danger btn-sm btn-icon">
+              <i class="fa fa-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td
+          colspan="7"
+          style="text-align: center; padding: 40px; color: var(--muted)"
+        >
+          No quizzes yet.
+          <a href="{{ url_for('admin_new_quiz') }}" style="color: var(--accent)"
+            >Create one</a
+          >.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
