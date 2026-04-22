@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account · LearnAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg:      #05080f; --bg2:  #0b1021; --bg3: #121929;
+      --accent:  #6378ff; --accent2: #a78bfa;
+      --green:   #34d399; --yellow: #fbbf24; --red: #f87171;
+      --text:    #e2e8f0; --muted: #64748b;
+      --border:  rgba(99,120,255,0.18);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 24px;
+      background-image: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(99,120,255,0.08), transparent 60%);
+    }
+    .top-bar { width: 100%; max-width: 640px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
+    .logo { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .logo i { -webkit-text-fill-color: var(--accent); }
+    .signin-link { font-size: .85rem; color: var(--muted); }
+    .signin-link a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+    .register-card { width: 100%; max-width: 560px; }
+    .card-head { text-align: center; margin-bottom: 36px; }
+    .card-head h1 { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; letter-spacing: -.5px; margin-bottom: 8px; }
+    .card-head p { color: var(--muted); font-size: .9rem; }
+
+    .step-indicator { display: flex; align-items: center; gap: 0; margin-bottom: 36px; }
+    .step-dot { display: flex; align-items: center; gap: 0; flex: 1; }
+    .step-dot:last-child { flex: 0; }
+    .sdot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Syne',sans-serif; font-weight: 800; font-size: .78rem; border: 2px solid var(--border); color: var(--muted); flex-shrink: 0; transition: all .3s; }
+    .sdot.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .sdot.done   { background: var(--green); border-color: var(--green); color: #fff; }
+    .sline { flex: 1; height: 2px; background: var(--border); margin: 0 6px; transition: background .3s; }
+    .sline.done { background: var(--green); }
+    .slabel { font-size: .7rem; color: var(--muted); text-align: center; margin-top: 4px; white-space: nowrap; }
+    .step-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+    .form-panel { background: rgba(11,16,33,0.8); border: 1px solid var(--border); border-radius: 20px; padding: 32px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 7px; letter-spacing: .5px; text-transform: uppercase; }
+    .input-wrap { position: relative; }
+    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .82rem; pointer-events: none; }
+    .form-input, .form-select {
+      width: 100%; background: var(--bg3); border: 1.5px solid var(--border);
+      border-radius: 11px; padding: 12px 14px 12px 40px;
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .9rem;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .form-select { padding-left: 14px; cursor: pointer; }
+    .form-input:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,120,255,.15); }
+    .form-input::placeholder { color: #475569; }
+    .form-select option { background: var(--bg2); }
+
+    .pw-toggle { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; font-size: .82rem; }
+    .pw-toggle:hover { color: var(--text); }
+    .pw-strength { height: 4px; border-radius: 99px; background: var(--bg3); margin-top: 8px; overflow: hidden; }
+    .pw-strength-fill { height: 100%; border-radius: 99px; transition: width .3s, background .3s; width: 0%; }
+    .pw-hint { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+
+    /* Experience cards */
+    .experience-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .exp-card { border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; cursor: pointer; transition: all .2s; }
+    .exp-card:hover { border-color: rgba(99,120,255,.5); }
+    .exp-card input { display: none; }
+    .exp-card:has(input:checked) { border-color: var(--accent); background: rgba(99,120,255,.1); }
+    .exp-icon { font-size: 1.4rem; margin-bottom: 6px; }
+    .exp-name { font-size: .82rem; font-weight: 700; }
+    .exp-sub  { font-size: .7rem; color: var(--muted); margin-top: 2px; }
+
+    /* Interest tags */
+    .interest-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .int-tag { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 99px; border: 1.5px solid var(--border); cursor: pointer; font-size: .82rem; transition: all .2s; }
+    .int-tag:hover { border-color: rgba(99,120,255,.5); }
+    .int-tag input { display: none; }
+    .int-tag:has(input:checked) { border-color: var(--accent); background: rgba(99,120,255,.1); color: var(--accent); }
+
+    .btn-submit {
+      width: 100%; padding: 14px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, var(--accent), #7b8fff);
+      color: #fff; font-family: 'DM Sans', sans-serif; font-size: .97rem; font-weight: 600;
+      cursor: pointer; transition: all .25s; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px;
+    }
+    .btn-submit:hover { box-shadow: 0 0 30px rgba(99,120,255,.45); transform: translateY(-1px); }
+    .btn-secondary { background: var(--bg3); border: 1.5px solid var(--border); color: var(--text); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); box-shadow: none; transform: none; }
+
+    .terms-text { font-size: .78rem; color: var(--muted); text-align: center; margin-top: 14px; line-height: 1.6; }
+    .terms-text a { color: var(--accent); text-decoration: none; }
+
+    .flash-box { padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: .85rem; display: flex; align-items: center; gap: 8px; }
+    .flash-error { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.3); color: var(--red); }
+    .flash-success { background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.3); color: var(--green); }
+
+    .hidden { display: none; }
+
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+      .experience-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="{{ url_for('index') }}" class="logo"><i class="fa-solid fa-brain"></i>LearnAI</a>
+  <div class="signin-link">Already registered? <a href="{{ url_for('login') }}">Sign in</a></div>
+</div>
+
+<div class="register-card">
+  <div class="card-head">
+    <h1>Create your account</h1>
+    <p>Free forever — start learning in 2 minutes</p>
+  </div>
+
+  <!-- Step indicator -->
+  <div class="step-indicator">
+    <div class="step-group">
+      <div class="sdot active" id="sd1">1</div>
+      <div class="slabel">Account</div>
+    </div>
+    <div class="sline" id="sl1"></div>
+    <div class="step-group">
+      <div class="sdot" id="sd2">2</div>
+      <div class="slabel">Profile</div>
+    </div>
+    <div class="sline" id="sl2"></div>
+    <div class="step-group">
+      <div class="sdot" id="sd3">3</div>
+      <div class="slabel">Interests</div>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="flash-box flash-{{ cat }}"><i class="fa fa-circle-info"></i> {{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST" id="regForm">
+    <!-- STEP 1: Account -->
+    <div class="form-panel" id="step1">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First name</label>
+          <div class="input-wrap">
+            <i class="input-icon fa fa-user"></i>
+            <input class="form-input" type="text" name="first_name" placeholder="Aarav" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last name</label>
+          <div class="input-wrap">
+            <i class="input-icon fa fa-user"></i>
+            <input class="form-input" type="text" name="last_name" placeholder="Sharma" required />
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email address</label>
+        <div class="input-wrap">
+          <i class="input-icon fa fa-envelope"></i>
+          <input class="form-input" type="email" name="email" placeholder="you@example.com" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <i class="input-icon fa fa-lock"></i>
+          <input class="form-input" type="password" name="password" id="pw" placeholder="Min. 8 characters" required minlength="8" oninput="checkStrength(this.value)" />
+          <button type="button" class="pw-toggle" onclick="togglePw()"><i class="fa fa-eye" id="pwIcon"></i></button>
+        </div>
+        <div class="pw-strength"><div class="pw-strength-fill" id="strengthFill"></div></div>
+        <div class="pw-hint" id="pwHint">Enter a password</div>
+      </div>
+      <button type="button" class="btn-submit" onclick="goStep(2)">Continue <i class="fa fa-arrow-right"></i></button>
+    </div>
+
+    <!-- STEP 2: Experience -->
+    <div class="form-panel hidden" id="step2">
+      <div class="form-group">
+        <label class="form-label">Your experience level</label>
+        <div class="experience-grid">
+          <label class="exp-card">
+            <input type="radio" name="experience" value="beginner" checked />
+            <div class="exp-icon">🌱</div>
+            <div class="exp-name">Beginner</div>
+            <div class="exp-sub">Just starting out</div>
+          </label>
+          <label class="exp-card">
+            <input type="radio" name="experience" value="intermediate" />
+            <div class="exp-icon">⚡</div>
+            <div class="exp-name">Intermediate</div>
+            <div class="exp-sub">Some experience</div>
+          </label>
+          <label class="exp-card">
+            <input type="radio" name="experience" value="advanced" />
+            <div class="exp-icon">🚀</div>
+            <div class="exp-name">Advanced</div>
+            <div class="exp-sub">I know the basics well</div>
+          </label>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="button" class="btn-submit btn-secondary" onclick="goStep(1)" style="width:auto;padding:14px 24px;"><i class="fa fa-arrow-left"></i></button>
+        <button type="button" class="btn-submit" onclick="goStep(3)" style="flex:1;">Continue <i class="fa fa-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Interests -->
+    <div class="form-panel hidden" id="step3">
+      <div class="form-group">
+        <label class="form-label">What do you want to learn?</label>
+        <div class="interest-tags">
+          <label class="int-tag"><input type="checkbox" name="interest" value="python" /><i class="fa fa-code"></i> Python</label>
+          <label class="int-tag"><input type="checkbox" name="interest" value="web" /><i class="fa fa-globe"></i> Web Dev</label>
+          <label class="int-tag"><input type="checkbox" name="interest" value="data" /><i class="fa fa-chart-bar"></i> Data Science</label>
+          <label class="int-tag"><input type="checkbox" name="interest" value="ml" /><i class="fa fa-robot"></i> Machine Learning</label>
+          <label class="int-tag"><input type="checkbox" name="interest" value="devops" /><i class="fa fa-server"></i> DevOps</label>
+          <label class="int-tag"><input type="checkbox" name="interest" value="mobile" /><i class="fa fa-mobile-alt"></i> Mobile</label>
+          <label class="int-tag"><input type="checkbox" name="interest" value="security" /><i class="fa fa-shield-halved"></i> Security</label>
+          <label class="int-tag"><input type="checkbox" name="interest" value="cloud" /><i class="fa fa-cloud"></i> Cloud</label>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="button" class="btn-submit btn-secondary" onclick="goStep(2)" style="width:auto;padding:14px 24px;"><i class="fa fa-arrow-left"></i></button>
+        <button type="submit" class="btn-submit" style="flex:1;"><i class="fa fa-check"></i> Create account</button>
+      </div>
+      <div class="terms-text">By creating an account you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</div>
+    </div>
+  </form>
+</div>
+
+<script>
+  let currentStep = 1;
+
+  function goStep(n) {
+    document.getElementById(`step${currentStep}`).classList.add('hidden');
+    document.getElementById(`step${n}`).classList.remove('hidden');
+    // Update dots
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById(`sd${i}`);
+      dot.className = 'sdot' + (i < n ? ' done' : i === n ? ' active' : '');
+      if (i < n) dot.innerHTML = '<i class="fa fa-check"></i>';
+      else dot.textContent = i;
+    }
+    // Update lines
+    for (let i = 1; i <= 2; i++) {
+      const line = document.getElementById(`sl${i}`);
+      line.className = 'sline' + (i < n ? ' done' : '');
+    }
+    currentStep = n;
+    window.scrollTo(0, 0);
+  }
+
+  function togglePw() {
+    const pw = document.getElementById('pw');
+    const ic = document.getElementById('pwIcon');
+    pw.type = pw.type === 'password' ? 'text' : 'password';
+    ic.className = pw.type === 'password' ? 'fa fa-eye' : 'fa fa-eye-slash';
+  }
+
+  function checkStrength(val) {
+    const fill = document.getElementById('strengthFill');
+    const hint = document.getElementById('pwHint');
+    let strength = 0;
+    if (val.length >= 8) strength++;
+    if (/[A-Z]/.test(val)) strength++;
+    if (/[0-9]/.test(val)) strength++;
+    if (/[^A-Za-z0-9]/.test(val)) strength++;
+    const colors = ['','#f87171','#fbbf24','#34d399','#6378ff'];
+    const labels = ['','Weak','Fair','Good','Strong'];
+    fill.style.width = (strength * 25) + '%';
+    fill.style.background = colors[strength];
+    hint.textContent = val.length === 0 ? 'Enter a password' : labels[strength];
+    hint.style.color = colors[strength] || 'var(--muted)';
+  }
+</script>
+</body>
+</html>

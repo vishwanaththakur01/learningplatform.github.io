@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Forum · LearnAI{% endblock %}
+{% block page_title %}Community Forum{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('new_forum_post') }}" class="btn btn-primary btn-sm"><i class="fa fa-pen"></i> New Post</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .forum-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 28px; }
+  .fstat { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; text-align: center; }
+  .fstat-val { font-family: var(--font-head); font-size: 1.6rem; font-weight: 800; color: var(--accent); }
+  .fstat-key { font-size: .75rem; color: var(--muted); letter-spacing: .5px; margin-top: 3px; }
+  .post-item { display: flex; gap: 16px; padding: 18px 20px; border-bottom: 1px solid rgba(99,120,255,.07); transition: background .2s; text-decoration: none; color: inherit; }
+  .post-item:hover { background: rgba(99,120,255,.04); }
+  .post-item:last-child { border-bottom: none; }
+  .post-votes { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 32px; padding-top: 2px; }
+  .vote-count { font-family: var(--font-head); font-weight: 800; font-size: 1rem; color: var(--muted); }
+  .vote-label { font-size: .6rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .post-body { flex: 1; min-width: 0; }
+  .post-title { font-family: var(--font-head); font-weight: 700; font-size: .98rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .post-title:hover { color: var(--accent); }
+  .post-excerpt { font-size: .82rem; color: var(--muted); line-height: 1.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .post-footer { display: flex; gap: 14px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+  .post-meta { font-size: .75rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .post-stat { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
+  .post-stat-val { font-family: var(--font-head); font-weight: 700; font-size: .95rem; }
+  .post-stat-key { font-size: .65rem; color: var(--muted); }
+  .pin-icon { color: var(--yellow); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="forum-stats">
+  <div class="fstat"><div class="fstat-val">{{ posts.total }}</div><div class="fstat-key">POSTS</div></div>
+  <div class="fstat"><div class="fstat-val">{{ current_user.points }}</div><div class="fstat-key">YOUR POINTS</div></div>
+  <div class="fstat"><div class="fstat-val">+2</div><div class="fstat-key">PTS PER POST</div></div>
+</div>
+
+<div class="card" style="overflow:hidden;">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-family:var(--font-head);font-weight:700;">Recent Discussions</div>
+    <div style="display:flex;gap:8px;">
+      <select class="form-select" style="width:auto;padding:7px 12px;font-size:.82rem;">
+        <option>All Topics</option><option>Python</option><option>Web Dev</option><option>Data Science</option>
+      </select>
+    </div>
+  </div>
+  <div>
+    {% for post in posts.items %}
+    <a href="{{ url_for('forum_post', post_id=post.id) }}" class="post-item">
+      <div class="post-votes">
+        <div class="vote-count">{{ post.view_count }}</div>
+        <div class="vote-label">views</div>
+      </div>
+      <div class="post-body">
+        <div class="post-title">
+          {% if post.is_pinned %}<i class="fa fa-thumbtack pin-icon"></i>{% endif %}
+          {{ post.title }}
+          {% if post.course_id %}<span class="badge badge-blue" style="font-size:.65rem;">{{ post.course_id }}</span>{% endif %}
+        </div>
+        <div class="post-excerpt">{{ post.body[:140] }}{% if post.body|length > 140 %}…{% endif %}</div>
+        <div class="post-footer">
+          <span class="post-meta"><i class="fa fa-user"></i> {{ post.author.name }}</span>
+          <span class="post-meta"><i class="fa fa-clock"></i> {{ post.created_at.strftime('%b %d, %Y') }}</span>
+          <span class="post-meta"><i class="fa fa-comments"></i> {{ post.comment_count() }} replies</span>
+        </div>
+      </div>
+      <div style="text-align:center;min-width:48px;padding-top:4px;">
+        <div class="post-stat-val">{{ post.comment_count() }}</div>
+        <div class="post-stat-key" style="font-size:.65rem;color:var(--muted);">replies</div>
+      </div>
+    </a>
+    {% else %}
+    <div style="padding:60px;text-align:center;color:var(--muted);">
+      <i class="fa fa-comments" style="font-size:2rem;margin-bottom:12px;display:block;opacity:.4;"></i>
+      No posts yet. Be the first to start a discussion!
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Pagination -->
+{% if posts.pages > 1 %}
+<div class="pagination">
+  <a class="page-btn {% if not posts.has_prev %}disabled{% endif %}" href="?page={{ posts.prev_num }}"><i class="fa fa-chevron-left"></i></a>
+  {% for p in posts.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+    {% if p %}<a class="page-btn {% if p==posts.page %}active{% endif %}" href="?page={{ p }}">{{ p }}</a>
+    {% else %}<span style="padding:0 4px;color:var(--muted);">…</span>{% endif %}
+  {% endfor %}
+  <a class="page-btn {% if not posts.has_next %}disabled{% endif %}" href="?page={{ posts.next_num }}"><i class="fa fa-chevron-right"></i></a>
+</div>
+{% endif %}
+{% endblock %}

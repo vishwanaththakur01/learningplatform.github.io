@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Chat Session · LearnAI{% endblock %}
+{% block page_title %}AI Tutor{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('chat') }}" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> All Chats</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .chat-wrap { max-width: 760px; margin: 0 auto; }
+  .chat-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 200px); }
+  .chat-head { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .bot-av { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,var(--accent),var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+  .msgs { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+  .msgs::-webkit-scrollbar { width: 4px; }
+  .msgs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  .msg { display: flex; gap: 10px; max-width: 76%; animation: mIn .25s ease; }
+  @keyframes mIn { from{opacity:0;transform:translateY(5px);} }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .m-av { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
+  .msg.assistant .m-av { background: linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; }
+  .msg.user .m-av { background: var(--bg3); color: var(--muted); }
+  .m-bubble { padding: 12px 16px; border-radius: 14px; font-size: .88rem; line-height: 1.65; }
+  .msg.assistant .m-bubble { background: var(--bg3); border: 1px solid var(--border); border-top-left-radius: 4px; }
+  .msg.user .m-bubble { background: linear-gradient(135deg,var(--accent),#7b8fff); color:#fff; border-top-right-radius: 4px; }
+  .m-time { font-size: .68rem; color: var(--muted); margin-top: 4px; }
+  .input-row { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-end; }
+  .input-row textarea { flex:1; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-family: var(--font-body); font-size: .88rem; resize: none; outline: none; max-height: 120px; transition: border-color .2s; }
+  .input-row textarea:focus { border-color: var(--accent); }
+  .send-btn { width: 44px; height: 44px; border-radius: 10px; background: var(--accent); border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; }
+  .send-btn:hover { background: #7b8fff; }
+  .send-btn:disabled { opacity:.5; }
+  .typing { display:flex;gap:5px;align-items:center;padding:8px 14px; }
+  .td { width:6px;height:6px;border-radius:50%;background:var(--accent);animation:b .8s infinite; }
+  .td:nth-child(2){animation-delay:.15s;}.td:nth-child(3){animation-delay:.3s;}
+  @keyframes b{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-wrap">
+  <div class="chat-box">
+    <div class="chat-head">
+      <div class="bot-av">🤖</div>
+      <div>
+        <div style="font-family:var(--font-head);font-weight:700;font-size:.95rem;">Session #{{ session.id }}</div>
+        <div style="font-size:.75rem;color:var(--muted);">Started {{ session.created_at.strftime('%b %d at %H:%M') }}</div>
+      </div>
+    </div>
+    <div class="msgs" id="msgs">
+      {% for m in messages %}
+      <div class="msg {{ m.role }}">
+        <div class="m-av">{% if m.role == 'user' %}{{ current_user.name[0].upper() }}{% else %}AI{% endif %}</div>
+        <div>
+          <div class="m-bubble">{{ m.content }}</div>
+          <div class="m-time">{{ m.created_at.strftime('%H:%M') }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="input-row">
+      <textarea id="inp" placeholder="Continue the conversation…" rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+      <button class="send-btn" id="sb" onclick="send()"><i class="fa fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const sessionId = {{ session.id }};
+  const msgs = document.getElementById('msgs');
+  msgs.scrollTop = msgs.scrollHeight;
+
+  function appendMsg(role, text) {
+    const el = document.createElement('div');
+    el.className = `msg ${role}`;
+    const av = role === 'user' ? '{{ current_user.name[0].upper() }}' : 'AI';
+    el.innerHTML = `<div class="m-av">${av}</div><div><div class="m-bubble">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div><div class="m-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>`;
+    msgs.appendChild(el);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showTyping() {
+    const el = document.createElement('div');
+    el.className = 'msg assistant'; el.id = 'typing';
+    el.innerHTML = `<div class="m-av">AI</div><div class="m-bubble"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+    msgs.appendChild(el); msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  async function send() {
+    const inp = document.getElementById('inp');
+    const text = inp.value.trim(); if (!text) return;
+    inp.value = ''; inp.style.height = 'auto';
+    document.getElementById('sb').disabled = true;
+    appendMsg('user', text); showTyping();
+    try {
+      const r = await fetch('/api/v1/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message:text, session_id:sessionId}) });
+      const d = await r.json();
+      document.getElementById('typing')?.remove();
+      if (d.data) appendMsg('assistant', d.data.reply);
+    } catch { document.getElementById('typing')?.remove(); appendMsg('assistant', 'Something went wrong.'); }
+    document.getElementById('sb').disabled = false;
+  }
+</script>
+{% endblock %}

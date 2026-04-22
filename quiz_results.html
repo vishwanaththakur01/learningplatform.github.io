@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Quiz Results · LearnAI{% endblock %}
+{% block page_title %}Quiz Results{% endblock %}
+
+{% block head %}
+<style>
+  .result-hero { text-align: center; padding: 40px 20px; }
+  .score-ring { position: relative; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring-text { position: absolute; text-align: center; }
+  .score-pct { font-family: var(--font-head); font-size: 2.4rem; font-weight: 800; line-height: 1; }
+  .score-sub { font-size: .78rem; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+  .result-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 99px; font-weight: 700; font-size: .95rem; margin-bottom: 12px; }
+  .result-pass { background: rgba(52,211,153,.15); border: 1.5px solid rgba(52,211,153,.4); color: var(--green); }
+  .result-fail { background: rgba(248,113,113,.15); border: 1.5px solid rgba(248,113,113,.4); color: var(--red); }
+  .result-stats { display: flex; justify-content: center; gap: 32px; margin-top: 16px; flex-wrap: wrap; }
+  .rstat { text-align: center; }
+  .rstat-val { font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; }
+  .rstat-key { font-size: .75rem; color: var(--muted); letter-spacing: .5px; margin-top: 2px; }
+
+  .q-review { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; }
+  .q-item { border-radius: 12px; border: 1.5px solid var(--border); overflow: hidden; }
+  .q-item-head { padding: 14px 18px; display: flex; align-items: flex-start; gap: 14px; }
+  .q-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .8rem; flex-shrink: 0; margin-top: 1px; }
+  .q-correct .q-icon   { background: rgba(52,211,153,.2); color: var(--green); }
+  .q-incorrect .q-icon { background: rgba(248,113,113,.2); color: var(--red); }
+  .q-correct  { border-color: rgba(52,211,153,.25); }
+  .q-incorrect { border-color: rgba(248,113,113,.25); }
+  .q-body { flex: 1; }
+  .q-text { font-weight: 600; font-size: .9rem; line-height: 1.5; }
+  .q-answers { margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .q-ans-chip { font-size: .78rem; padding: 3px 10px; border-radius: 99px; }
+  .q-your  { background: rgba(248,113,113,.1); color: var(--red); }
+  .q-right { background: rgba(52,211,153,.1);  color: var(--green); }
+  .q-same  { background: rgba(52,211,153,.1);  color: var(--green); }
+  .q-explain { padding: 10px 18px 14px 60px; font-size: .83rem; color: var(--muted); border-top: 1px solid rgba(99,120,255,.08); background: rgba(0,0,0,.15); }
+  .q-explain i { color: var(--accent2); margin-right: 5px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:740px;margin:0 auto;">
+  <!-- Score Hero -->
+  <div class="card card-pad result-hero" style="margin-bottom:24px;">
+    {% set r = attempt.score / 100 %}
+    {% set c = 220 %}
+    {% set stroke = 16 %}
+    {% set cr = (c - stroke) / 2 %}
+    {% set circ = 3.14159 * cr * 2 %}
+    {% set dash = (r * circ)|round(2) %}
+
+    <div class="score-ring">
+      <svg width="{{ c }}" height="{{ c }}" viewBox="0 0 {{ c }} {{ c }}">
+        <circle cx="{{ c/2 }}" cy="{{ c/2 }}" r="{{ cr }}" fill="none" stroke="var(--bg3)" stroke-width="{{ stroke }}" />
+        <circle cx="{{ c/2 }}" cy="{{ c/2 }}" r="{{ cr }}" fill="none"
+          stroke="{% if attempt.passed %}var(--green){% else %}var(--red){% endif %}"
+          stroke-width="{{ stroke }}" stroke-linecap="round"
+          stroke-dasharray="{{ circ }}"
+          stroke-dashoffset="{{ circ - dash }}"
+          style="transition:stroke-dashoffset 1.2s ease;" />
+      </svg>
+      <div class="score-ring-text">
+        <div class="score-pct" style="color:{% if attempt.passed %}var(--green){% else %}var(--red){% endif %}">{{ attempt.score|int }}%</div>
+        <div class="score-sub">SCORE</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="result-badge {% if attempt.passed %}result-pass{% else %}result-fail{% endif %}">
+        {% if attempt.passed %}<i class="fa fa-trophy"></i> Passed!{% else %}<i class="fa fa-rotate-right"></i> Not passed{% endif %}
+      </div>
+    </div>
+
+    <div class="result-stats">
+      <div class="rstat"><div class="rstat-val">{{ attempt.earned_points }}/{{ attempt.total_points }}</div><div class="rstat-key">POINTS</div></div>
+      <div class="rstat"><div class="rstat-val">{{ attempt.time_taken // 60 }}m {{ attempt.time_taken % 60 }}s</div><div class="rstat-key">TIME</div></div>
+      <div class="rstat"><div class="rstat-val">{{ quiz.pass_score }}%</div><div class="rstat-key">PASS MARK</div></div>
+    </div>
+  </div>
+
+  <!-- Question review -->
+  <h2 style="font-family:var(--font-head);font-size:1.1rem;font-weight:700;margin-bottom:16px;">
+    <i class="fa fa-list-check" style="color:var(--accent);margin-right:8px;"></i>Answer Review
+  </h2>
+  <div class="q-review">
+    {% for question in questions %}
+      {% set user_ans = answers.get(question.id|string, '') %}
+      {% set is_correct = user_ans.lower() == question.correct_answer.lower() %}
+      <div class="q-item {% if is_correct %}q-correct{% else %}q-incorrect{% endif %}">
+        <div class="q-item-head">
+          <div class="q-icon">
+            {% if is_correct %}<i class="fa fa-check"></i>{% else %}<i class="fa fa-xmark"></i>{% endif %}
+          </div>
+          <div class="q-body">
+            <div class="q-text">{{ question.text }}</div>
+            <div class="q-answers">
+              {% if not is_correct %}
+              <span class="q-ans-chip q-your"><i class="fa fa-user" style="margin-right:4px;"></i>{{ user_ans or 'No answer' }}</span>
+              {% endif %}
+              <span class="q-ans-chip {% if is_correct %}q-same{% else %}q-right{% endif %}"><i class="fa fa-check" style="margin-right:4px;"></i>{{ question.correct_answer }}</span>
+            </div>
+          </div>
+          <div class="badge {% if is_correct %}badge-green{% else %}badge-red{% endif %}">+{{ question.points if is_correct else 0 }} pts</div>
+        </div>
+        {% if question.explanation %}
+        <div class="q-explain"><i class="fa fa-lightbulb"></i>{{ question.explanation }}</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <div style="display:flex;gap:12px;margin-top:28px;justify-content:center;flex-wrap:wrap;">
+    <a href="{{ url_for('quiz_results_history', quiz_id=quiz.id) }}" class="btn btn-secondary"><i class="fa fa-clock-rotate-left"></i> Attempt History</a>
+    <a href="{{ url_for('courses') }}" class="btn btn-primary"><i class="fa fa-book-open"></i> Back to Courses</a>
+    {% if not attempt.passed %}
+    <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="btn btn-primary" style="background:var(--yellow);color:#000;"><i class="fa fa-rotate-right"></i> Retry</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

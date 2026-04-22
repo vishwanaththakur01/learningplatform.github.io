@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ error_code }} · LearnAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg: #05080f; --bg2: #0b1021;
+      --accent: #6378ff; --accent2: #a78bfa;
+      --text: #e2e8f0; --muted: #64748b; --red: #f87171;
+      --border: rgba(99,120,255,0.15);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 40px 24px;
+      background-image: radial-gradient(ellipse 60% 40% at 50% 30%, rgba(99,120,255,0.07), transparent 70%);
+    }
+    .error-code {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(5rem, 18vw, 10rem);
+      font-weight: 800;
+      letter-spacing: -4px;
+      line-height: 1;
+      background: linear-gradient(135deg,
+        {% if error_code == 404 %}var(--accent), var(--accent2)
+        {% elif error_code == 403 %}#fbbf24, #f59e0b
+        {% else %}var(--red), #ef4444{% endif %}
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+      animation: glitch 4s infinite;
+    }
+    @keyframes glitch {
+      0%,95%,100% { transform: translate(0); }
+      96% { transform: translate(-3px, 1px); }
+      97% { transform: translate(3px, -1px); }
+      98% { transform: translate(-2px); }
+      99% { transform: translate(2px, 2px); }
+    }
+    .error-icon {
+      width: 80px; height: 80px; border-radius: 24px; margin: 0 auto 28px;
+      display: flex; align-items: center; justify-content: center; font-size: 2rem;
+      background: {% if error_code == 404 %}rgba(99,120,255,.12){% elif error_code == 403 %}rgba(251,191,36,.12){% else %}rgba(248,113,113,.12){% endif %};
+      border: 1px solid {% if error_code == 404 %}rgba(99,120,255,.3){% elif error_code == 403 %}rgba(251,191,36,.3){% else %}rgba(248,113,113,.3){% endif %};
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+    .error-title { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; }
+    .error-msg { color: var(--muted); font-size: .95rem; line-height: 1.75; max-width: 400px; margin: 0 auto 36px; }
+
+    .error-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: var(--accent); color: #fff; text-decoration: none;
+      padding: 13px 24px; border-radius: 12px; font-family: 'DM Sans', sans-serif;
+      font-size: .92rem; font-weight: 600; transition: all .2s;
+    }
+    .btn-primary:hover { background: #7b8fff; box-shadow: 0 0 24px rgba(99,120,255,.4); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 9px;
+      border: 1.5px solid var(--border); color: var(--text); text-decoration: none;
+      padding: 13px 24px; border-radius: 12px; font-family: 'DM Sans', sans-serif;
+      font-size: .92rem; font-weight: 500; transition: all .2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .error-suggestions { margin-top: 48px; }
+    .error-suggestions h3 { font-family: 'Syne', sans-serif; font-size: .85rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .sugg-links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .sugg-link { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 99px; border: 1px solid var(--border); background: var(--bg2); color: var(--muted); text-decoration: none; font-size: .82rem; transition: all .2s; }
+    .sugg-link:hover { border-color: rgba(99,120,255,.4); color: var(--text); }
+
+    .logo { position: fixed; top: 24px; left: 28px; font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .logo i { -webkit-text-fill-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<a href="{{ url_for('index') }}" class="logo"><i class="fa-solid fa-brain"></i>LearnAI</a>
+
+<div class="error-icon">
+  {% if error_code == 404 %}🔍
+  {% elif error_code == 403 %}🔒
+  {% else %}⚡{% endif %}
+</div>
+
+<div class="error-code">{{ error_code }}</div>
+
+<div class="error-title">
+  {% if error_code == 404 %}Page not found
+  {% elif error_code == 403 %}Access denied
+  {% else %}Something went wrong{% endif %}
+</div>
+
+<div class="error-msg">
+  {% if message %}{{ message }}{% elif error_code == 404 %}
+    The page you're looking for doesn't exist. It might have been moved, deleted, or you may have mistyped the URL.
+  {% elif error_code == 403 %}
+    You don't have permission to access this page. If you think this is a mistake, please contact support.
+  {% else %}
+    Our servers are having a moment. The issue has been logged and we're on it. Please try again shortly.
+  {% endif %}
+</div>
+
+<div class="error-actions">
+  <a href="javascript:history.back()" class="btn-secondary"><i class="fa fa-arrow-left"></i> Go back</a>
+  {% if current_user.is_authenticated %}
+    <a href="{{ url_for('dashboard') }}" class="btn-primary"><i class="fa fa-house"></i> Dashboard</a>
+  {% else %}
+    <a href="{{ url_for('index') }}" class="btn-primary"><i class="fa fa-house"></i> Home</a>
+  {% endif %}
+</div>
+
+{% if error_code == 404 %}
+<div class="error-suggestions">
+  <h3>Try one of these</h3>
+  <div class="sugg-links">
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('courses') }}"    class="sugg-link"><i class="fa fa-book-open"></i> Courses</a>
+      <a href="{{ url_for('forum') }}"       class="sugg-link"><i class="fa fa-comments"></i> Forum</a>
+      <a href="{{ url_for('leaderboard') }}" class="sugg-link"><i class="fa fa-ranking-star"></i> Leaderboard</a>
+      <a href="{{ url_for('chat') }}"        class="sugg-link"><i class="fa fa-robot"></i> AI Tutor</a>
+    {% else %}
+      <a href="{{ url_for('login') }}"    class="sugg-link"><i class="fa fa-arrow-right-to-bracket"></i> Sign in</a>
+      <a href="{{ url_for('register') }}" class="sugg-link"><i class="fa fa-user-plus"></i> Register</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+</body>
+</html>

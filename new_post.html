@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}New Post · Forum · LearnAI{% endblock %}
+{% block page_title %}New Discussion{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('forum') }}" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Back to Forum</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:700px;margin:0 auto;">
+  <div class="card card-pad">
+    <h2 style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;margin-bottom:24px;">
+      <i class="fa fa-pen-to-square" style="color:var(--accent);margin-right:10px;"></i>Start a Discussion
+    </h2>
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input class="form-input" type="text" name="title" placeholder="What's your question or topic?" required maxlength="200" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Related Course (optional)</label>
+        <select class="form-select" name="course_id">
+          <option value="">— General Discussion —</option>
+          {% for course in courses %}
+          <option value="{{ course.id }}">{{ course.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Body *</label>
+        <textarea class="form-textarea" name="body" rows="8" placeholder="Describe your question or topic in detail…" required></textarea>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:8px;">
+        <a href="{{ url_for('forum') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-paper-plane"></i> Post Discussion</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card-pad" style="margin-top:20px;font-size:.85rem;">
+    <div style="font-family:var(--font-head);font-weight:700;margin-bottom:12px;"><i class="fa fa-lightbulb" style="color:var(--yellow);margin-right:8px;"></i>Tips for a great post</div>
+    <ul style="color:var(--muted);line-height:1.9;padding-left:18px;">
+      <li>Be specific — include error messages, code snippets, or examples</li>
+      <li>Describe what you've already tried</li>
+      <li>Link to the relevant course if applicable</li>
+      <li>Earn +2 points for every post you create</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

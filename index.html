@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learn With AI — Intelligent Learning Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg:      #05080f;
+      --bg2:     #0b1021;
+      --accent:  #6378ff;
+      --accent2: #a78bfa;
+      --green:   #34d399;
+      --yellow:  #fbbf24;
+      --red:     #f87171;
+      --text:    #e2e8f0;
+      --muted:   #64748b;
+      --border:  rgba(99,120,255,0.18);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── NAVIGATION ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; padding: 0 40px; height: 68px;
+      background: rgba(5,8,15,0.8); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(99,120,255,0.1);
+      transition: all .3s ease;
+    }
+
+    nav.scrolled {
+      background: rgba(5,8,15,0.95);
+      border-bottom-color: rgba(99,120,255,0.25);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif; font-size: 1.35rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      display: flex; align-items: center; gap: 9px; margin-right: auto;
+      transition: transform .2s;
+      cursor: pointer;
+    }
+
+    .nav-logo:hover { transform: scale(1.05); }
+    .nav-logo i { -webkit-text-fill-color: var(--accent); font-size: 1.2rem; }
+    
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    
+    .nav-link {
+      color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 500;
+      padding: 8px 16px; border-radius: 8px; transition: all .25s;
+      position: relative;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: rgba(99,120,255, 0.1);
+    }
+
+    .nav-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff !important;
+      border-radius: 10px !important;
+      padding: 10px 24px !important;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all .3s;
+      box-shadow: 0 4px 15px rgba(99,120,255,0.3);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99,120,255,0.5);
+    }
+
+    /* ── HERO SECTION ── */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 120px 24px 80px;
+      position: relative; overflow: hidden;
+    }
+
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 20% 50%, rgba(99,120,255,0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 80%, rgba(167,139,250,0.1) 0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+
+    .hero-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(99,120,255,.12); border: 1px solid rgba(99,120,255,.4);
+      border-radius: 99px; padding: 8px 18px; font-size: .8rem; font-weight: 600;
+      color: var(--accent2); margin-bottom: 32px;
+      animation: slideInDown .8s ease-out;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-chip span {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      display: inline-block;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(0.8); } }
+    @keyframes slideInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.8rem, 8vw, 4.8rem);
+      font-weight: 800; line-height: 1.1; letter-spacing: -2px;
+      margin: 0 auto 24px;
+      animation: slideInUp .8s .15s ease-out both;
+    }
+
+    .hero h1 .grad {
+      background: linear-gradient(135deg, var(--accent), var(--accent2), var(--green));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .hero-sub {
+      font-size: 1.15rem; color: var(--muted); 
+      margin: 0 auto 48px; line-height: 1.8;
+      animation: slideInUp .8s .25s ease-out both;
+      max-width: 580px;
+    }
+
+    .hero-actions {
+      display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+      margin-bottom: 64px;
+      animation: slideInUp .8s .35s ease-out both;
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; text-decoration: none;
+      padding: 16px 36px; border-radius: 12px; font-weight: 600; font-size: 1rem;
+      transition: all .3s;
+      border: none; cursor: pointer;
+      box-shadow: 0 8px 30px rgba(99,120,255,0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 45px rgba(99,120,255,0.6);
+    }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      border: 2px solid rgba(99,120,255,0.4); color: var(--text); text-decoration: none;
+      padding: 14px 34px; border-radius: 12px; font-weight: 600; font-size: 1rem;
+      transition: all .3s;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      background: rgba(99,120,255,0.1);
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .hero-stats {
+      display: flex; gap: 48px; justify-content: center; flex-wrap: wrap;
+      animation: slideInUp .8s .45s ease-out both;
+    }
+
+    .hstat {
+      text-align: center;
+      animation: fadeIn .8s ease-out both;
+    }
+
+    .hstat-val {
+      font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      display: block; margin-bottom: 6px;
+    }
+
+    .hstat-key { font-size: .8rem; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 0 40px;
+    }
+
+    /* ── FEATURES SECTION ── */
+    .section {
+      padding: 100px 40px; max-width: 1200px; margin: 0 auto;
+      position: relative;
+    }
+
+    .section-label {
+      font-size: .75rem; font-weight: 700; letter-spacing: 2.5px;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 800; letter-spacing: -1px; margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .section-sub {
+      font-size: 1.05rem; color: var(--muted);
+      max-width: 560px; line-height: 1.75;
+    }
+
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px; margin-top: 56px;
+    }
+
+    .feat-card {
+      background: linear-gradient(135deg, rgba(11,16,33,0.8), rgba(20,25,50,0.6));
+      border: 1px solid var(--border); border-radius: 18px; padding: 32px;
+      transition: all .35s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative; overflow: hidden;
+    }
+
+    .feat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0; transition: opacity .3s;
+    }
+
+    .feat-card::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(99,120,255,0.05), transparent 70%);
+      opacity: 0; transition: opacity .3s;
+    }
+
+    .feat-card:hover {
+      border-color: rgba(99,120,255,.5);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 50px rgba(99,120,255,0.2);
+    }
+
+    .feat-card:hover::before { opacity: 1; }
+    .feat-card:hover::after { opacity: 1; }
+
+    .feat-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 20px;
+      transition: transform .3s;
+    }
+
+    .feat-card:hover .feat-icon { transform: scale(1.1) rotate(5deg); }
+
+    .feat-title {
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.15rem;
+      margin-bottom: 12px;
+    }
+
+    .feat-desc {
+      font-size: .95rem; color: var(--muted); line-height: 1.75;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .steps-wrap {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+      align-items: center; margin-top: 56px;
+    }
+
+    .steps-list { display: flex; flex-direction: column; gap: 0; }
+
+    .step-item {
+      display: flex; gap: 24px; padding: 28px 0;
+      border-bottom: 1px solid rgba(99,120,255,.08);
+      cursor: pointer; transition: all .3s;
+      position: relative;
+    }
+
+    .step-item:hover .step-num {
+      background: var(--accent);
+      color: #fff;
+      transform: scale(1.1);
+      box-shadow: 0 8px 20px rgba(99,120,255,0.4);
+    }
+
+    .step-num {
+      width: 48px; height: 48px; border-radius: 14px;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+      flex-shrink: 0; transition: all .3s;
+      color: var(--accent2);
+    }
+
+    .step-title {
+      font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 1.1rem; margin-bottom: 6px;
+    }
+
+    .step-desc {
+      font-size: .9rem; color: var(--muted); line-height: 1.7;
+    }
+
+    .steps-visual {
+      background: linear-gradient(135deg, rgba(11,16,33,0.95), rgba(20,25,50,0.7));
+      border: 1px solid var(--border); border-radius: 20px;
+      padding: 40px; min-height: 420px;
+      display: flex; flex-direction: column; gap: 20px;
+      position: relative; overflow: hidden;
+    }
+
+    .steps-visual::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 60% 0%, rgba(99,120,255,0.1), transparent 60%);
+      pointer-events: none;
+    }
+
+    .vis-row {
+      display: flex; gap: 12px; align-items: center;
+      position: relative; z-index: 1;
+    }
+
+    .vis-bar {
+      height: 12px; border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      box-shadow: 0 4px 15px rgba(99,120,255,0.3);
+    }
+
+    .vis-label { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+
+    .vis-card {
+      background: rgba(99,120,255,.1);
+      border: 1px solid rgba(99,120,255,.25);
+      border-radius: 12px; padding: 16px;
+      font-size: .85rem;
+      position: relative; z-index: 1;
+      backdrop-filter: blur(10px);
+    }
+
+    .vis-card-title {
+      font-weight: 700; font-size: .95rem; margin-bottom: 6px;
+      color: var(--accent);
+    }
+
+    /* ── TESTIMONIALS ── */
+    .testi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px; margin-top: 48px;
+    }
+
+    .testi-card {
+      background: linear-gradient(135deg, rgba(11,16,33,0.9), rgba(20,25,50,0.6));
+      border: 1px solid var(--border); border-radius: 16px; padding: 28px;
+      transition: all .35s;
+      position: relative;
+    }
+
+    .testi-card::before {
+      content: '"'; position: absolute; top: 16px; left: 20px;
+      font-size: 3rem; font-weight: 800;
+      color: rgba(99,120,255,0.15);
+      font-family: 'Syne', sans-serif;
+    }
+
+    .testi-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(99,120,255,0.3);
+      box-shadow: 0 12px 35px rgba(99,120,255,0.15);
+    }
+
+    .testi-stars {
+      color: var(--yellow); font-size: .85rem; margin-bottom: 16px;
+      letter-spacing: 3px; text-shadow: 0 0 10px rgba(251,191,36,0.3);
+    }
+
+    .testi-text {
+      font-size: .95rem; color: var(--muted); line-height: 1.8;
+      margin-bottom: 20px; font-style: italic;
+    }
+
+    .testi-author {
+      display: flex; align-items: center; gap: 12px; padding-top: 16px;
+      border-top: 1px solid rgba(99,120,255,0.1);
+    }
+
+    .testi-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .9rem; color: #fff;
+      box-shadow: 0 4px 15px rgba(99,120,255,0.3);
+    }
+
+    .testi-name { font-size: .9rem; font-weight: 600; }
+    .testi-role { font-size: .8rem; color: var(--muted); }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      margin: 0 40px 120px; border-radius: 24px; padding: 80px 40px;
+      background: linear-gradient(135deg, rgba(99,120,255,.15), rgba(167,139,250,.1), rgba(52,211,153,.05));
+      border: 1px solid rgba(99,120,255,.3);
+      text-align: center; position: relative; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(99,120,255,0.2);
+    }
+
+    .cta-section::before {
+      content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+      width: 500px; height: 400px; border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(99,120,255,0.2), transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-section h2 {
+      font-family: 'Syne', sans-serif; font-size: 2.6rem;
+      font-weight: 800; letter-spacing: -1px; margin-bottom: 16px;
+      line-height: 1.2; position: relative; z-index: 1;
+    }
+
+    .cta-section p {
+      color: var(--muted); max-width: 520px; margin: 0 auto 42px;
+      line-height: 1.8; font-size: 1.05rem; position: relative; z-index: 1;
+    }
+
+    .cta-actions {
+      display: flex; gap: 16px; justify-content: center;
+      flex-wrap: wrap; position: relative; z-index: 1;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(99,120,255,.15); padding: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 24px; font-size: .85rem; color: var(--muted);
+      background: rgba(11,16,33,0.5);
+    }
+
+    .footer-logo {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .footer-links {
+      display: flex; gap: 28px;
+    }
+
+    .footer-links a {
+      color: var(--muted); text-decoration: none;
+      transition: all .2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .footer-links a:hover {
+      color: var(--accent);
+    }
+
+    /* ── RESPONSIVENESS ── */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .steps-wrap { grid-template-columns: 1fr; gap: 60px; }
+      .section { padding: 80px 30px; }
+      nav { padding: 0 24px; }
+    }
+
+    @media (max-width: 768px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .testi-grid { grid-template-columns: 1fr; }
+      .hero { padding: 100px 20px 60px; }
+      .hero h1 { font-size: 2.2rem; }
+      .hero-stats { gap: 24px; }
+      .nav-links .nav-ghost { display: none; }
+      .cta-section { margin: 0 20px 80px; padding: 60px 24px; }
+      footer { flex-direction: column; text-align: center; }
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 0 16px; height: 60px; }
+      .nav-logo { font-size: 1.1rem; }
+      .hero h1 { font-size: 1.8rem; letter-spacing: -0.5px; }
+      .hero-sub { font-size: 1rem; }
+      .section-title { font-size: 1.5rem; }
+      .hero-actions { gap: 12px; }
+      .btn-primary, .btn-secondary { padding: 12px 24px; font-size: .95rem; }
+      .divider { margin: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav id="navbar">
+  <a href="/" class="nav-logo"><i class="fa-solid fa-brain"></i> Learn With AI</a>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#how" class="nav-link">How it works</a>
+    <a href="#testimonials" class="nav-link">Testimonials</a>
+    <a href="{{ url_for('login') }}" class="nav-link">Log in</a>
+    <a href="{{ url_for('register') }}" class="nav-btn">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO SECTION -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-chip">
+      <span></span>
+      Powered by adaptive AI
+    </div>
+
+    <h1>Learn smarter,<br />not <span class="grad">harder</span></h1>
+
+    <p class="hero-sub">LearnAI adapts to your learning style in real time — delivering personalised courses, instant AI tutoring, and a community to grow with.</p>
+
+    <div class="hero-actions">
+      <a href="{{ url_for('register') }}" class="btn-primary">
+        <i class="fa fa-rocket"></i> Start for Free
+      </a>
+      <a href="#how" class="btn-secondary">
+        <i class="fa fa-play"></i> See How It Works
+      </a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hstat" style="animation-delay: 0s;">
+        <div class="hstat-val">50k+</div>
+        <div class="hstat-key">Active Learners</div>
+      </div>
+      <div class="hstat" style="animation-delay: 0.1s;">
+        <div class="hstat-val">20+</div>
+        <div class="hstat-key">Courses</div>
+      </div>
+      <div class="hstat" style="animation-delay: 0.2s;">
+        <div class="hstat-val" style="background: linear-gradient(135deg, var(--green), var(--accent)); -webkit-background-clip: text;">4.9★</div>
+        <div class="hstat-key">Avg. Rating</div>
+      </div>
+      <div class="hstat" style="animation-delay: 0.3s;">
+        <div class="hstat-val">24/7</div>
+        <div class="hstat-key">AI Assist</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES SECTION -->
+<section id="features">
+  <div class="section">
+    <div class="section-label">What you get</div>
+    <h2 class="section-title">Everything you need<br />to reach your goals</h2>
+    <p class="section-sub">From personalised learning paths to community discussions — LearnAI has every tool you need to learn effectively.</p>
+
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon" style="background: rgba(99,120,255,.15); color: var(--accent);">
+          <i class="fa fa-robot"></i>
+        </div>
+        <div class="feat-title">AI Tutor, Always On</div>
+        <div class="feat-desc">Ask any question, get instant explanations, code examples, and encouragement from your personal AI tutor — powered by the latest models.</div>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background: rgba(52,211,153,.15); color: var(--green);">
+          <i class="fa fa-route"></i>
+        </div>
+        <div class="feat-title">Adaptive Learning Paths</div>
+        <div class="feat-desc">Your path adapts based on your performance, learning style, and goals. No wasted time on things you already know.</div>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background: rgba(251,191,36,.15); color: var(--yellow);">
+          <i class="fa fa-graduation-cap"></i>
+        </div>
+        <div class="feat-title">Graded Quizzes</div>
+        <div class="feat-desc">Reinforce what you've learned with timed quizzes, detailed answer reviews, and explanations for every question.</div>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background: rgba(167,139,250,.15); color: var(--accent2);">
+          <i class="fa fa-ranking-star"></i>
+        </div>
+        <div class="feat-title">Leaderboard & Points</div>
+        <div class="feat-desc">Earn points for every activity — completing courses, passing quizzes, helping others. Climb the leaderboard and stay motivated.</div>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background: rgba(248,113,113,.15); color: var(--red);">
+          <i class="fa fa-comments"></i>
+        </div>
+        <div class="feat-title">Community Forums</div>
+        <div class="feat-desc">Ask questions, share solutions, and learn from peers. Course-scoped discussions keep conversations relevant and useful.</div>
+      </div>
+
+      <div class="feat-card">
+        <div class="feat-icon" style="background: rgba(99,120,255,.15); color: var(--accent);">
+          <i class="fa fa-chart-line"></i>
+        </div>
+        <div class="feat-title">Progress Tracking</div>
+        <div class="feat-desc">Visualise your growth across every topic. See your streaks, scores, and time invested — all in one beautiful dashboard.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section">
+    <div class="section-label">How It Works</div>
+    <h2 class="section-title">Up and learning<br />in minutes</h2>
+
+    <div class="steps-wrap">
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-num">01</div>
+          <div>
+            <div class="step-title">Create Your Account</div>
+            <div class="step-desc">Sign up in seconds. Tell us your experience level and learning goals to get started.</div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">02</div>
+          <div>
+            <div class="step-title">Take the Style Assessment</div>
+            <div class="step-desc">Our AI analyses how you learn best — visual, hands-on, reading — and builds your profile.</div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">03</div>
+          <div>
+            <div class="step-title">Follow Your Adaptive Path</div>
+            <div class="step-desc">Get a personalised curriculum that evolves as you progress. Skip what you know, deep-dive what you don't.</div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">04</div>
+          <div>
+            <div class="step-title">Learn, Quiz & Earn</div>
+            <div class="step-desc">Complete lessons, ace quizzes, climb the leaderboard, and earn achievements along the way.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="steps-visual">
+        <div style="font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; margin-bottom: 16px; color: var(--text);">Your Progress</div>
+
+        <div class="vis-row">
+          <div class="vis-label" style="width: 90px; text-align: left;">Python</div>
+          <div style="flex: 1; background: #1e293b; border-radius: 99px; height: 12px; overflow: hidden;">
+            <div class="vis-bar" style="width: 72%;"></div>
+          </div>
+          <div class="vis-label" style="margin-left: 12px; color: var(--accent); font-weight: 600;">72%</div>
+        </div>
+
+        <div class="vis-row">
+          <div class="vis-label" style="width: 90px; text-align: left;">Web Dev</div>
+          <div style="flex: 1; background: #1e293b; border-radius: 99px; height: 12px; overflow: hidden;">
+            <div class="vis-bar" style="width: 45%; background: linear-gradient(90deg, var(--accent2), var(--green));"></div>
+          </div>
+          <div class="vis-label" style="margin-left: 12px; color: var(--accent2); font-weight: 600;">45%</div>
+        </div>
+
+        <div class="vis-row">
+          <div class="vis-label" style="width: 90px; text-align: left;">Data Sci</div>
+          <div style="flex: 1; background: #1e293b; border-radius: 99px; height: 12px; overflow: hidden;">
+            <div class="vis-bar" style="width: 28%; background: linear-gradient(90deg, var(--green), var(--yellow));"></div>
+          </div>
+          <div class="vis-label" style="margin-left: 12px; color: var(--green); font-weight: 600;">28%</div>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0;">
+          <span style="background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.3); border-radius: 8px; padding: 6px 14px; font-size: .8rem; color: var(--green); font-weight: 600;">🔥 7 Day Streak</span>
+          <span style="background: rgba(99,120,255,.12); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size: .8rem; color: var(--accent); font-weight: 600;">⚡ 340 Points</span>
+        </div>
+
+        <div class="vis-card">
+          <div class="vis-card-title">🤖 AI Tutor Says:</div>
+          <div style="color: var(--muted); font-size: .85rem;">Great work on decorators! Next: <strong style="color: var(--accent2);">Context managers</strong> → based on your learning pace.</div>
+        </div>
+
+        <div class="vis-card" style="background: rgba(52,211,153,.1); border-color: rgba(52,211,153,.25);">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, var(--yellow), #f59e0b); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🏆</div>
+            <div>
+              <div style="font-size: .85rem; font-weight: 700; color: var(--text);">Achievement Unlocked!</div>
+              <div style="font-size: .75rem; color: var(--muted);">Quick Learner — Completed first course</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="section">
+    <div class="section-label">What Learners Say</div>
+    <h2 class="section-title">Loved by learners worldwide</h2>
+
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">The AI tutor is genuinely incredible. I was stuck on async Python for days — one conversation and it clicked completely.</div>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background: linear-gradient(135deg, var(--accent), var(--accent2));">V</div>
+          <div>
+            <div class="testi-name">Vishwanath</div>
+            <div class="testi-role">Backend Developer</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">I love that the path actually adapts. I didn't waste time on basics I already knew. Jumped straight into the harder stuff.</div>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background: linear-gradient(135deg, var(--green), #059669);">S</div>
+          <div>
+            <div class="testi-name">Sophia</div>
+            <div class="testi-role">Data Analyst</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">The leaderboard keeps me coming back every day. Healthy competition + real learning = the best combo I've found.</div>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background: linear-gradient(135deg, var(--yellow), #d97706);">A</div>
+          <div>
+            <div class="testi-name">Alex</div>
+            <div class="testi-role">Computer Science Student</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA SECTION -->
+<section id="cta">
+  <div class="cta-section">
+    <h2>Ready to start<br /><span style="background: linear-gradient(135deg, var(--accent), var(--accent2), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">learning smarter?</span></h2>
+    <p>Join thousands of learners already growing with LearnAI. Free to start, no credit card required.</p>
+    <div class="cta-actions">
+      <a href="{{ url_for('register') }}" class="btn-primary">
+        <i class="fa fa-rocket"></i> Create Free Account
+      </a>
+      <a href="{{ url_for('login') }}" class="btn-secondary">
+        Already have an account? Sign in
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Learn With AI</div>
+  <div class="footer-links">
+    <a href="#"><i class="fa fa-shield"></i> Privacy</a>
+    <a href="#"><i class="fa fa-file-contract"></i> Terms</a>
+    <a href="#"><i class="fa fa-envelope"></i> Contact</a>
+  </div>
+  <div>© 2025 Learn With AI. All rights reserved.</div>
+</footer>
+
+<script>
+  // Navbar scroll effect
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
+  });
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Intersection Observer for fade-in animations
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -100px 0px'
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.animation = 'slideInUp 0.8s ease-out forwards';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  // Observe all feature cards and testimonial cards
+  document.querySelectorAll('.feat-card, .testi-card, .step-item').forEach(el => {
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>

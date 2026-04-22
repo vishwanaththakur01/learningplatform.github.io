@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Attempt History · LearnAI{% endblock %}
+{% block page_title %}Quiz History{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="btn btn-primary btn-sm"><i class="fa fa-rotate-right"></i> Retake</a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:700px;margin:0 auto;">
+  <div class="card card-pad" style="margin-bottom:24px;">
+    <div style="font-family:var(--font-head);font-size:1.3rem;font-weight:800;">{{ quiz.title }}</div>
+    <div style="color:var(--muted);font-size:.85rem;margin-top:6px;">{{ attempts|length }} attempt(s) · Pass score: {{ quiz.pass_score }}%</div>
+  </div>
+
+  {% if attempts %}
+    {% set best = attempts | sort(attribute='score') | last %}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+      <div class="card card-pad" style="text-align:center;">
+        <div style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;color:var(--accent);">{{ attempts|length }}</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:3px;">ATTEMPTS</div>
+      </div>
+      <div class="card card-pad" style="text-align:center;">
+        <div style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;color:var(--green);">{{ best.score|int }}%</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:3px;">BEST SCORE</div>
+      </div>
+      <div class="card card-pad" style="text-align:center;">
+        {% set passed_count = attempts | selectattr('passed') | list | length %}
+        <div style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;color:{% if passed_count > 0 %}var(--green){% else %}var(--red){% endif %};">{{ passed_count }}</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:3px;">PASSES</div>
+      </div>
+    </div>
+
+    <div class="card" style="overflow:hidden;">
+      <table class="table">
+        <thead><tr><th>#</th><th>Score</th><th>Points</th><th>Time</th><th>Date</th><th>Result</th></tr></thead>
+        <tbody>
+          {% for a in attempts %}
+          <tr>
+            <td style="color:var(--muted);">{{ loop.index }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="progress-bar" style="width:80px;"><div class="progress-fill" style="width:{{ a.score }}%;background:{% if a.passed %}var(--green){% else %}var(--red){% endif %};"></div></div>
+                <span style="font-family:var(--font-head);font-weight:700;font-size:.95rem;">{{ a.score|int }}%</span>
+              </div>
+            </td>
+            <td style="font-size:.85rem;">{{ a.earned_points }}/{{ a.total_points }}</td>
+            <td style="color:var(--muted);font-size:.85rem;">{{ a.time_taken // 60 }}m {{ a.time_taken % 60 }}s</td>
+            <td style="color:var(--muted);font-size:.82rem;">{{ a.completed_at.strftime('%b %d, %Y %H:%M') }}</td>
+            <td>
+              {% if a.passed %}<span class="badge badge-green"><i class="fa fa-check"></i> Passed</span>
+              {% else %}<span class="badge badge-red"><i class="fa fa-xmark"></i> Failed</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="card card-pad" style="text-align:center;color:var(--muted);">No attempts yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

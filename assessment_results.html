@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Your Learning Style · LearnAI{% endblock %}
+{% block page_title %}Assessment Results{% endblock %}
+
+{% block head %}
+<style>
+  .result-wrap { max-width: 760px; margin: 0 auto; }
+  .result-hero { background: linear-gradient(135deg, rgba(99,120,255,.12), rgba(167,139,250,.07)); border: 1px solid rgba(99,120,255,.3); border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 28px; position: relative; overflow: hidden; }
+  .result-hero::before { content: ''; position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 300px; height: 200px; background: radial-gradient(ellipse, rgba(99,120,255,.15), transparent 70%); pointer-events: none; }
+  .style-badge { display: inline-flex; align-items: center; gap: 10px; background: rgba(99,120,255,.15); border: 1.5px solid rgba(99,120,255,.4); border-radius: 99px; padding: 10px 22px; font-size: 1rem; font-weight: 700; margin-bottom: 20px; animation: popIn .5s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes popIn { from{opacity:0;transform:scale(.8);} }
+  .result-title { font-family: var(--font-head); font-size: 2rem; font-weight: 800; letter-spacing: -.5px; margin-bottom: 10px; }
+  .result-title span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .result-sub { color: var(--muted); font-size: .95rem; line-height: 1.7; max-width: 480px; margin: 0 auto; }
+  .confidence-row { display: flex; align-items: center; gap: 14px; margin: 24px auto 0; max-width: 340px; }
+  .conf-label { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+
+  .scores-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .score-bar-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px; text-align: center; }
+  .score-bar-card.dominant { border-color: rgba(99,120,255,.5); background: rgba(99,120,255,.07); }
+  .score-icon { font-size: 1.5rem; margin-bottom: 8px; }
+  .score-name { font-size: .75rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .score-ring-mini { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+  .score-ring-mini svg { transform: rotate(-90deg); }
+  .score-ring-val { position: absolute; font-family: var(--font-head); font-size: .85rem; font-weight: 800; }
+
+  .trait-list { display: flex; flex-direction: column; gap: 10px; }
+  .trait-item { display: flex; align-items: center; gap: 12px; padding: 13px 16px; background: var(--bg3); border-radius: 11px; border: 1px solid var(--border); font-size: .87rem; }
+  .trait-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .9rem; flex-shrink: 0; }
+
+  .rec-courses { display: flex; flex-direction: column; gap: 10px; }
+  .rc-item { display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; text-decoration: none; color: inherit; transition: all .2s; }
+  .rc-item:hover { border-color: rgba(99,120,255,.4); }
+  .rc-thumb { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+  .rc-info { flex: 1; }
+  .rc-title { font-weight: 700; font-size: .88rem; margin-bottom: 3px; }
+  .rc-meta  { font-size: .75rem; color: var(--muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set style_data = {
+  'visual':      {'emoji':'👁','label':'Visual Learner','desc':'You absorb information best through diagrams, videos, charts, and visual demonstrations.','color':'var(--accent)'},
+  'auditory':    {'emoji':'🎧','label':'Auditory Learner','desc':'You learn best by listening — lectures, discussions, and verbal explanations resonate most.','color':'var(--accent2)'},
+  'kinesthetic': {'emoji':'✋','label':'Kinesthetic Learner','desc':'You learn by doing — hands-on practice, building projects, and interactive exercises suit you best.','color':'var(--green)'},
+  'reading':     {'emoji':'📖','label':'Reading/Writing Learner','desc':'You thrive with written content — detailed documentation, notes, and structured text work best.','color':'var(--yellow)'}
+} %}
+{% set sd = style_data.get(result.dominant_style, style_data['visual']) %}
+{% set scores = result.scores %}
+
+<div class="result-wrap">
+
+  <!-- Hero -->
+  <div class="result-hero">
+    <div class="style-badge" style="color:{{ sd.color }};">{{ sd.emoji }} {{ sd.label }}</div>
+    <div class="result-title">You're a <span>{{ result.dominant_style|capitalize }}</span> Learner</div>
+    <div class="result-sub">{{ sd.desc }}</div>
+    <div class="confidence-row">
+      <span class="conf-label">Confidence</span>
+      <div style="flex:1;"><div class="progress-bar" style="height:8px;"><div class="progress-fill" style="width:{{ (result.confidence * 100)|int }}%;background:{{ sd.color }};"></div></div></div>
+      <span style="font-family:var(--font-head);font-weight:800;color:{{ sd.color }};">{{ (result.confidence * 100)|int }}%</span>
+    </div>
+  </div>
+
+  <!-- Score breakdown -->
+  <div class="scores-grid">
+    {% for style_key, emoji in [('visual','👁'),('auditory','🎧'),('kinesthetic','✋'),('reading','📖')] %}
+    {% set pct = ((scores.get(style_key, 0)) * 100)|int %}
+    <div class="score-bar-card {% if style_key == result.dominant_style %}dominant{% endif %}">
+      <div class="score-icon">{{ emoji }}</div>
+      <div class="score-name">{{ style_key|capitalize }}</div>
+      <div class="score-ring-mini">
+        {% set r = 28 %} {% set circ = 3.14159 * r * 2 %} {% set dash = (pct / 100 * circ)|round(1) %}
+        <svg width="70" height="70" viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="{{ r }}" fill="none" stroke="var(--bg3)" stroke-width="8"/>
+          <circle cx="35" cy="35" r="{{ r }}" fill="none"
+            stroke="{% if style_key == result.dominant_style %}var(--accent){% else %}var(--border){% endif %}"
+            stroke-width="8" stroke-linecap="round"
+            stroke-dasharray="{{ circ }}" stroke-dashoffset="{{ circ - dash }}" />
+        </svg>
+        <div class="score-ring-val" style="{% if style_key == result.dominant_style %}color:var(--accent);{% else %}color:var(--muted);{% endif %}">{{ pct }}%</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Traits -->
+  <div class="card card-pad" style="margin-bottom:24px;">
+    <div style="font-family:var(--font-head);font-weight:700;font-size:1rem;margin-bottom:16px;"><i class="fa fa-lightbulb" style="color:var(--yellow);margin-right:8px;"></i>What this means for you</div>
+    <div class="trait-list">
+      {% if result.dominant_style == 'visual' %}
+        {% set traits = [('👁','Prefers charts, diagrams, and visual examples','bg:rgba(99,120,255,.1)'),('📹','Benefits from video content and screen recordings','bg:rgba(99,120,255,.1)'),('🗺','Uses mind-maps and flowcharts to organize ideas','bg:rgba(99,120,255,.1)'),('🎨','Remembers color-coded or structured layouts better','bg:rgba(99,120,255,.1)')] %}
+      {% elif result.dominant_style == 'kinesthetic' %}
+        {% set traits = [('💻','Learns fastest by writing and running code','bg:rgba(52,211,153,.1)'),('🧪','Enjoys experimenting and breaking things to learn','bg:rgba(52,211,153,.1)'),('🏗','Motivated by building real projects','bg:rgba(52,211,153,.1)'),('⚡','Short, hands-on exercises beat long lectures','bg:rgba(52,211,153,.1)')] %}
+      {% elif result.dominant_style == 'auditory' %}
+        {% set traits = [('🎧','Listens to explanations rather than reading','bg:rgba(167,139,250,.1)'),('🗣','Talks through problems out loud to understand them','bg:rgba(167,139,250,.1)'),('📣','Discussion forums and study groups help most','bg:rgba(167,139,250,.1)'),('🎙','Benefits from hearing code walkthroughs','bg:rgba(167,139,250,.1)')] %}
+      {% else %}
+        {% set traits = [('📖','Reads documentation thoroughly before coding','bg:rgba(251,191,36,.1)'),('✏️','Takes detailed notes to retain information','bg:rgba(251,191,36,.1)'),('📝','Strong at written problem-solving and analysis','bg:rgba(251,191,36,.1)'),('📚','Appreciates structured, text-based references','bg:rgba(251,191,36,.1)')] %}
+      {% endif %}
+      {% for icon, text, _ in traits %}
+      <div class="trait-item">
+        <div class="trait-icon" style="background:rgba(99,120,255,.1);">{{ icon }}</div>
+        {{ text }}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Recommended courses -->
+  <div class="card card-pad" style="margin-bottom:24px;">
+    <div style="font-family:var(--font-head);font-weight:700;font-size:1rem;margin-bottom:16px;"><i class="fa fa-wand-magic-sparkles" style="color:var(--accent);margin-right:8px;"></i>Recommended for you</div>
+    <div class="rec-courses">
+      {% for course in recommendations %}
+      <a href="{{ url_for('course_content', course_id=course.id) }}" class="rc-item">
+        <div class="rc-thumb" style="background:rgba(99,120,255,.12);">
+          {% if course.topic == 'python' %}🐍{% elif course.topic == 'web' %}🌐{% else %}📊{% endif %}
+        </div>
+        <div class="rc-info">
+          <div class="rc-title">{{ course.title }}</div>
+          <div class="rc-meta">
+            <span class="badge badge-blue" style="font-size:.65rem;">{{ course.topic }}</span>
+            {{ course.difficulty|capitalize }} · {{ course.duration }}m
+          </div>
+        </div>
+        <i class="fa fa-chevron-right" style="color:var(--muted);font-size:.8rem;"></i>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary"><i class="fa fa-house"></i> Go to Dashboard</a>
+    <a href="{{ url_for('courses') }}"   class="btn btn-secondary"><i class="fa fa-book-open"></i> Browse Courses</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}{{ post.title }} · Forum · LearnAI{% endblock %}
+{% block page_title %}Forum{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('forum') }}" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> Back</a>
+  {% if post.user_id == current_user.id or current_user.is_admin %}
+  <form method="POST" action="{{ url_for('delete_forum_post', post_id=post.id) }}" style="display:inline;" onsubmit="return confirm('Delete this post?')">
+    <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+  </form>
+  {% endif %}
+{% endblock %}
+
+{% block head %}
+<style>
+  .post-card { padding: 28px; border-radius: var(--radius); background: var(--card-bg); border: 1px solid var(--border); margin-bottom: 24px; }
+  .post-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
+  .author-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg,var(--accent),var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 1rem; flex-shrink: 0; }
+  .post-title-h1 { font-family: var(--font-head); font-size: 1.5rem; font-weight: 800; line-height: 1.3; margin-bottom: 6px; }
+  .post-meta-row { display: flex; gap: 16px; flex-wrap: wrap; font-size: .78rem; color: var(--muted); }
+  .post-content { font-size: .95rem; line-height: 1.75; color: var(--text); white-space: pre-wrap; }
+  .post-tags { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+  .comments-section h2 { font-family: var(--font-head); font-weight: 700; font-size: 1.1rem; margin-bottom: 16px; }
+  .comment-item { display: flex; gap: 14px; margin-bottom: 16px; }
+  .c-avatar { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#334155,#475569); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .82rem; color: var(--text); flex-shrink: 0; }
+  .c-body { flex: 1; }
+  .c-bubble { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; border-top-left-radius: 4px; padding: 14px 16px; }
+  .c-bubble.is-answer { background: rgba(52,211,153,.07); border-color: rgba(52,211,153,.3); }
+  .c-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .c-name { font-weight: 600; font-size: .85rem; }
+  .c-time { font-size: .72rem; color: var(--muted); }
+  .c-text { font-size: .88rem; line-height: 1.65; white-space: pre-wrap; }
+  .c-actions { margin-top: 8px; display: flex; gap: 10px; }
+  .c-action-btn { background: none; border: none; color: var(--muted); font-size: .75rem; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; transition: all .2s; }
+  .c-action-btn:hover { background: var(--bg); color: var(--text); }
+  .answer-mark { display: inline-flex; align-items: center; gap: 5px; font-size: .72rem; font-weight: 700; color: var(--green); }
+
+  .reply-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-top: 24px; }
+  .reply-card h3 { font-family: var(--font-head); font-weight: 700; margin-bottom: 14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Post -->
+<div class="post-card">
+  <div class="post-head">
+    <div class="author-avatar">{{ post.author.name[0].upper() }}</div>
+    <div style="flex:1;">
+      <div class="post-title-h1">{{ post.title }}</div>
+      <div class="post-meta-row">
+        <span><i class="fa fa-user"></i> {{ post.author.name }}</span>
+        <span><i class="fa fa-clock"></i> {{ post.created_at.strftime('%B %d, %Y at %H:%M') }}</span>
+        <span><i class="fa fa-eye"></i> {{ post.view_count }} views</span>
+        <span><i class="fa fa-comments"></i> {{ comments|length }} replies</span>
+        {% if post.course_id %}<span><i class="fa fa-book-open"></i> {{ post.course_id }}</span>{% endif %}
+      </div>
+    </div>
+    {% if post.is_pinned %}<span class="badge badge-yellow"><i class="fa fa-thumbtack"></i> Pinned</span>{% endif %}
+  </div>
+  <div class="post-content">{{ post.body }}</div>
+</div>
+
+<!-- Comments -->
+<div class="comments-section">
+  <h2><i class="fa fa-comments" style="color:var(--accent);margin-right:8px;"></i>{{ comments|length }} Replies</h2>
+
+  {% for comment in comments %}
+  <div class="comment-item" id="c{{ comment.id }}">
+    <div class="c-avatar">{{ comment.author.name[0].upper() }}</div>
+    <div class="c-body">
+      <div class="c-bubble {% if comment.is_answer %}is-answer{% endif %}">
+        <div class="c-meta">
+          <span class="c-name">{{ comment.author.name }}</span>
+          <span class="c-time">{{ comment.created_at.strftime('%b %d · %H:%M') }}</span>
+          {% if comment.is_answer %}<span class="answer-mark"><i class="fa fa-circle-check"></i> Accepted Answer</span>{% endif %}
+        </div>
+        <div class="c-text">{{ comment.body }}</div>
+      </div>
+      {% if post.user_id == current_user.id or current_user.is_admin %}
+      <div class="c-actions">
+        <button class="c-action-btn" onclick="markAnswer({{ comment.id }})">
+          <i class="fa fa-circle-check"></i> {% if comment.is_answer %}Unmark Answer{% else %}Mark as Answer{% endif %}
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:32px;color:var(--muted);font-size:.9rem;">
+    No replies yet. Be the first to respond!
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Reply form -->
+<div class="reply-card">
+  <h3><i class="fa fa-reply" style="color:var(--accent);margin-right:8px;"></i>Post a Reply</h3>
+  <form method="POST">
+    <div class="form-group">
+      <textarea class="form-textarea" name="body" placeholder="Share your thoughts or answer…" rows="4" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fa fa-paper-plane"></i> Post Reply</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function markAnswer(commentId) {
+    const res  = await fetch(`/forum/comment/${commentId}/mark-answer`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) location.reload();
+  }
+</script>
+{% endblock %}

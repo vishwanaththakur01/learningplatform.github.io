@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard · LearnAI{% endblock %}
+{% block page_title %}Leaderboard{% endblock %}
+
+{% block head %}
+<style>
+  .lb-podium { display: flex; align-items: flex-end; justify-content: center; gap: 20px; margin-bottom: 40px; }
+  .podium-slot { text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .podium-avatar {
+    width: 60px; height: 60px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-weight: 800; font-size: 1.2rem;
+    color: #fff; margin-bottom: 10px; position: relative;
+  }
+  .podium-avatar .rank-badge {
+    position: absolute; bottom: -4px; right: -4px;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .65rem; font-weight: 800; border: 2px solid var(--bg2);
+  }
+  .podium-slot:nth-child(1) .podium-avatar { background: linear-gradient(135deg,#b8860b,#ffd700); order:2; width:70px; height:70px; font-size:1.4rem; }
+  .podium-slot:nth-child(2) .podium-avatar { background: linear-gradient(135deg,#666,#c0c0c0); }
+  .podium-slot:nth-child(3) .podium-avatar { background: linear-gradient(135deg,#8b4513,#cd7f32); }
+  .podium-slot:nth-child(1) .rank-badge { background: #ffd700; color: #000; }
+  .podium-slot:nth-child(2) .rank-badge { background: #c0c0c0; color: #000; }
+  .podium-slot:nth-child(3) .rank-badge { background: #cd7f32; color: #000; }
+  .podium-bar { border-radius: 10px 10px 0 0; width: 80px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; font-family: var(--font-head); font-weight: 800; font-size: .9rem; }
+  .podium-slot:nth-child(1) .podium-bar { height: 110px; background: linear-gradient(180deg,rgba(255,215,0,.25),rgba(255,215,0,.05)); border: 1px solid rgba(255,215,0,.3); order:2; width:90px; }
+  .podium-slot:nth-child(2) .podium-bar { height: 80px; background: linear-gradient(180deg,rgba(192,192,192,.2),rgba(192,192,192,.05)); border: 1px solid rgba(192,192,192,.3); }
+  .podium-slot:nth-child(3) .podium-bar { height: 60px; background: linear-gradient(180deg,rgba(205,127,50,.2),rgba(205,127,50,.05)); border: 1px solid rgba(205,127,50,.3); }
+  .podium-name { font-weight: 600; font-size: .88rem; margin-top: 8px; }
+  .podium-pts { font-size: .75rem; color: var(--muted); }
+  .podium-slot:nth-child(1) { order: 2; }
+  .podium-slot:nth-child(2) { order: 1; }
+  .podium-slot:nth-child(3) { order: 3; }
+
+  .my-rank-card { display: flex; align-items: center; gap: 16px; padding: 16px 24px; margin-bottom: 24px; border-radius: var(--radius); background: rgba(99,120,255,.08); border: 1.5px solid rgba(99,120,255,.3); }
+  .my-rank-num { font-family: var(--font-head); font-size: 2rem; font-weight: 800; color: var(--accent); min-width: 60px; text-align: center; }
+  .my-rank-label { font-size: .8rem; color: var(--muted); }
+
+  .lb-row { display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-radius: 12px; transition: background .2s; }
+  .lb-row:hover { background: var(--bg3); }
+  .lb-row.highlight { background: rgba(99,120,255,.08); border: 1px solid rgba(99,120,255,.2); }
+  .lb-rank { font-family: var(--font-head); font-weight: 800; font-size: 1.1rem; min-width: 40px; color: var(--muted); }
+  .lb-rank.top1 { color: #ffd700; }
+  .lb-rank.top2 { color: #c0c0c0; }
+  .lb-rank.top3 { color: #cd7f32; }
+  .lb-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,var(--accent),var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem; color: #fff; flex-shrink: 0; }
+  .lb-info { flex: 1; }
+  .lb-name { font-weight: 600; font-size: .92rem; }
+  .lb-meta { font-size: .75rem; color: var(--muted); }
+  .lb-points { font-family: var(--font-head); font-weight: 800; font-size: 1.1rem; color: var(--accent); }
+  .lb-courses { font-size: .75rem; color: var(--muted); text-align: right; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if my_rank %}
+<div class="my-rank-card">
+  <div>
+    <div class="my-rank-label">YOUR RANK</div>
+    <div class="my-rank-num">#{{ my_rank }}</div>
+  </div>
+  <div style="flex:1;">
+    <div style="font-weight:600;">{{ current_user.name }}</div>
+    <div style="font-size:.82rem;color:var(--muted);">{{ current_user.points }} points · {{ current_user.current_level|capitalize }}</div>
+  </div>
+  <div style="text-align:right;">
+    {% if my_rank == 1 %}<span class="badge badge-yellow">👑 Top of the board!</span>
+    {% elif my_rank <= 10 %}<span class="badge badge-green">🔥 Top 10</span>
+    {% else %}<span class="badge badge-blue">Keep climbing!</span>{% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Podium (top 3) -->
+{% if board|length >= 3 %}
+<div class="lb-podium">
+  {% for entry in board[:3] %}
+  <div class="podium-slot">
+    <div class="podium-avatar">
+      {{ entry.user.name[0].upper() }}
+      <div class="rank-badge">{{ entry.rank }}</div>
+    </div>
+    <div class="podium-name">{{ entry.user.name.split()[0] }}</div>
+    <div class="podium-pts">{{ entry.user.points }} pts</div>
+    <div class="podium-bar">{{ entry.rank }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Full table -->
+<div class="card" style="overflow:hidden;">
+  <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-family:var(--font-head);font-weight:700;font-size:1rem;">All Rankings</div>
+    <span class="badge badge-blue">{{ board|length }} learners</span>
+  </div>
+  <div style="padding:12px 8px;">
+    {% for entry in board %}
+    <div class="lb-row {% if entry.is_current_user %}highlight{% endif %}">
+      <div class="lb-rank {% if entry.rank==1 %}top1{% elif entry.rank==2 %}top2{% elif entry.rank==3 %}top3{% endif %}">
+        {% if entry.rank == 1 %}👑{% elif entry.rank == 2 %}🥈{% elif entry.rank == 3 %}🥉{% else %}#{{ entry.rank }}{% endif %}
+      </div>
+      <div class="lb-avatar">{{ entry.user.name[0].upper() }}</div>
+      <div class="lb-info">
+        <div class="lb-name">{{ entry.user.name }} {% if entry.is_current_user %}<span class="badge badge-blue" style="font-size:.65rem;">You</span>{% endif %}</div>
+        <div class="lb-meta">{{ entry.user.current_level|capitalize }} · Joined {{ entry.user.created_at.strftime('%b %Y') }}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="lb-points">{{ entry.user.points }}</div>
+        <div class="lb-courses">{{ entry.completed_courses }} courses</div>
+      </div>
+    </div>
+    {% else %}
+    <div style="padding:40px;text-align:center;color:var(--muted);">No data yet. Start learning to earn points!</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

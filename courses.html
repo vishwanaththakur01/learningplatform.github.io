@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}Courses · LearnAI{% endblock %}
+{% block page_title %}Courses{% endblock %}
+
+{% block head %}
+<style>
+  .filters-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; align-items: center;
+  }
+  .filter-pill {
+    padding: 8px 18px; border-radius: 99px; border: 1.5px solid var(--border);
+    background: none; color: var(--muted); cursor: pointer; font-family: var(--font-body);
+    font-size: .83rem; font-weight: 500; transition: all .2s;
+  }
+  .filter-pill:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-sep { width: 1px; height: 24px; background: var(--border); }
+  .search-wrap { position: relative; margin-left: auto; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .82rem; }
+  .search-input { background: var(--bg3); border: 1.5px solid var(--border); border-radius: 10px; padding: 9px 14px 9px 34px; color: var(--text); font-family: var(--font-body); font-size: .85rem; outline: none; width: 220px; transition: border-color .2s; }
+  .search-input:focus { border-color: var(--accent); }
+
+  .courses-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .c-card {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
+    transition: all .25s; text-decoration: none; color: inherit;
+  }
+  .c-card:hover { border-color: rgba(99,120,255,.45); transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.3); }
+  .c-card-top { padding: 24px; background: var(--bg3); border-bottom: 1px solid var(--border); position: relative; min-height: 100px; display: flex; align-items: flex-start; justify-content: space-between; }
+  .c-emoji { font-size: 2.2rem; }
+  .c-diff-badge { font-size: .7rem; font-weight: 700; padding: 4px 10px; border-radius: 99px; }
+  .c-card-body { padding: 18px; flex: 1; display: flex; flex-direction: column; }
+  .c-topic-tag { font-size: .7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .c-title { font-family: var(--font-head); font-size: 1rem; font-weight: 700; line-height: 1.4; margin-bottom: 8px; }
+  .c-desc  { font-size: .82rem; color: var(--muted); line-height: 1.65; flex: 1; }
+  .c-card-foot { padding: 14px 18px; border-top: 1px solid rgba(99,120,255,.07); display: flex; align-items: center; gap: 12px; }
+  .c-foot-meta { font-size: .75rem; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .c-foot-btn { margin-left: auto; font-size: .78rem; padding: 7px 14px; border-radius: 8px; background: rgba(99,120,255,.1); color: var(--accent); border: 1px solid rgba(99,120,255,.2); cursor: pointer; text-decoration: none; font-weight: 600; transition: all .2s; }
+  .c-foot-btn:hover { background: var(--accent); color: #fff; }
+
+  .no-results { grid-column: 1/-1; text-align: center; padding: 60px; color: var(--muted); }
+  .no-results i { font-size: 2rem; margin-bottom: 12px; display: block; opacity: .4; }
+
+  @media (max-width: 1024px) { .courses-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px)  { .courses-grid { grid-template-columns: 1fr; } .search-input { width: 100%; } .filters-bar { flex-wrap: wrap; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="filters-bar">
+  <button class="filter-pill active" data-filter="all">All</button>
+  <div class="filter-sep"></div>
+  <button class="filter-pill" data-filter="python">Python</button>
+  <button class="filter-pill" data-filter="web">Web Dev</button>
+  <button class="filter-pill" data-filter="data_science">Data Science</button>
+  <div class="filter-sep"></div>
+  <button class="filter-pill" data-diff="beginner">Beginner</button>
+  <button class="filter-pill" data-diff="intermediate">Intermediate</button>
+  <button class="filter-pill" data-diff="advanced">Advanced</button>
+  <div class="search-wrap">
+    <i class="search-icon fa fa-search"></i>
+    <input class="search-input" type="text" id="searchInput" placeholder="Search courses…" oninput="filterCards()" />
+  </div>
+</div>
+
+<div class="courses-grid" id="coursesGrid">
+  {% for course in courses %}
+  {% set emojis = {'python':'🐍','web':'🌐','data_science':'📊','machine_learning':'🤖','devops':'⚙️'} %}
+  {% set colors = {'beginner':'badge-green','intermediate':'badge-yellow','advanced':'badge-red'} %}
+  {% set topic_colors = {'python':'var(--accent)','web':'var(--green)','data_science':'var(--yellow)'} %}
+  <a href="{{ url_for('course_content', course_id=course.id) }}"
+     class="c-card"
+     data-topic="{{ course.topic }}"
+     data-difficulty="{{ course.difficulty }}"
+     data-title="{{ course.title|lower }}">
+    <div class="c-card-top">
+      <div class="c-emoji">{{ emojis.get(course.topic, '📚') }}</div>
+      <span class="c-diff-badge badge {{ colors.get(course.difficulty, 'badge-blue') }}">{{ course.difficulty|capitalize }}</span>
+    </div>
+    <div class="c-card-body">
+      <div class="c-topic-tag" style="color:{{ topic_colors.get(course.topic, 'var(--accent)') }};">{{ course.topic|replace('_',' ')|upper }}</div>
+      <div class="c-title">{{ course.title }}</div>
+      <div class="c-desc">{{ (course.description or 'Comprehensive course to build real skills.')|truncate(100) }}</div>
+    </div>
+    <div class="c-card-foot">
+      <span class="c-foot-meta"><i class="fa fa-clock"></i> {{ course.duration }}m</span>
+      <span class="c-foot-meta"><i class="fa fa-signal"></i> {{ course.difficulty|capitalize }}</span>
+      <span class="c-foot-btn">Start →</span>
+    </div>
+  </a>
+  {% endfor %}
+
+  <div class="no-results" id="noResults" style="display:none;">
+    <i class="fa fa-magnifying-glass"></i>
+    No courses match your filters.
+    <br /><button class="filter-pill active" style="margin-top:14px;" onclick="resetFilters()">Clear filters</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let activeFilter = 'all';
+  let activeDiff   = 'all';
+
+  document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      filterCards();
+    });
+  });
+
+  document.querySelectorAll('[data-diff]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('active')) { btn.classList.remove('active'); activeDiff = 'all'; }
+      else { document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('active')); btn.classList.add('active'); activeDiff = btn.dataset.diff; }
+      filterCards();
+    });
+  });
+
+  function filterCards() {
+    const q       = document.getElementById('searchInput').value.toLowerCase();
+    const cards   = document.querySelectorAll('.c-card');
+    let visible   = 0;
+
+    cards.forEach(card => {
+      const topicOk = activeFilter === 'all' || card.dataset.topic === activeFilter;
+      const diffOk  = activeDiff  === 'all' || card.dataset.difficulty === activeDiff;
+      const searchOk = !q || card.dataset.title.includes(q);
+      const show = topicOk && diffOk && searchOk;
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+
+    document.getElementById('noResults').style.display = visible === 0 ? '' : 'none';
+  }
+
+  function resetFilters() {
+    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-filter="all"]').classList.add('active');
+    document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('active'));
+    document.getElementById('searchInput').value = '';
+    activeFilter = 'all'; activeDiff = 'all';
+    filterCards();
+  }
+</script>
+{% endblock %}

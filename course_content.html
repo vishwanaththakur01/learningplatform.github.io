@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.title }} · LearnAI{% endblock %}
+{% block page_title %}{{ course.topic|capitalize }} Course{% endblock %}
+{% block topbar_actions %}
+  <a href="{{ url_for('courses') }}" class="btn btn-secondary btn-sm"><i class="fa fa-arrow-left"></i> All Courses</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .content-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+  .content-main { display: flex; flex-direction: column; gap: 24px; }
+
+  .course-hero { border-radius: var(--radius); overflow: hidden; background: var(--card-bg); border: 1px solid var(--border); }
+  .course-hero-top { padding: 36px; background: linear-gradient(135deg, rgba(99,120,255,.12), rgba(167,139,250,.06)); border-bottom: 1px solid var(--border); display: flex; gap: 20px; align-items: flex-start; }
+  .course-big-icon { font-size: 3rem; flex-shrink: 0; }
+  .course-hero-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .course-h-title { font-family: var(--font-head); font-size: 1.6rem; font-weight: 800; letter-spacing: -.5px; line-height: 1.2; }
+  .course-h-desc { color: var(--muted); font-size: .9rem; margin-top: 10px; line-height: 1.7; }
+
+  /* ── Progress ── */
+  .progress-panel { padding: 24px 36px; }
+  .progress-label-row { display: flex; justify-content: space-between; font-size: .82rem; margin-bottom: 8px; }
+  .progress-label-row span:first-child { color: var(--muted); }
+  .progress-label-row span:last-child  { font-family: var(--font-head); font-weight: 800; color: var(--accent); }
+
+  /* ── Content tabs ── */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .tab { padding: 12px 20px; cursor: pointer; font-size: .88rem; font-weight: 600; color: var(--muted); border-bottom: 2.5px solid transparent; margin-bottom: -1px; transition: all .2s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; animation: fadeTab .25s ease; }
+  .tab-panel.active { display: block; }
+  @keyframes fadeTab { from{opacity:0;transform:translateY(4px);} }
+
+  /* ── Content body ── */
+  .content-body { font-size: .92rem; line-height: 1.85; color: var(--text); }
+  .content-body h2 { font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; margin: 24px 0 10px; }
+  .content-body h3 { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin: 18px 0 8px; color: var(--accent2); }
+  .content-body p  { margin-bottom: 14px; }
+  .content-body code { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; font-family: 'Courier New', monospace; font-size: .85em; color: var(--accent2); }
+  .content-body pre { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 16px 0; overflow-x: auto; }
+  .content-body pre code { background: none; border: none; padding: 0; font-size: .88em; }
+  .content-body ul, .content-body ol { padding-left: 20px; margin-bottom: 14px; }
+  .content-body li { margin-bottom: 6px; }
+  .content-body blockquote { border-left: 3px solid var(--accent); padding: 12px 20px; background: rgba(99,120,255,.06); border-radius: 0 10px 10px 0; margin: 16px 0; color: var(--muted); }
+
+  /* ── Lesson list ── */
+  .lesson-list { display: flex; flex-direction: column; gap: 2px; }
+  .lesson-item { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-radius: 10px; cursor: pointer; transition: background .2s; }
+  .lesson-item:hover { background: var(--bg3); }
+  .lesson-item.active { background: rgba(99,120,255,.1); border: 1px solid rgba(99,120,255,.2); }
+  .lesson-num { width: 28px; height: 28px; border-radius: 8px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; flex-shrink: 0; color: var(--muted); }
+  .lesson-num.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .lesson-num.current { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .lesson-title { flex: 1; font-size: .87rem; font-weight: 500; }
+  .lesson-dur { font-size: .72rem; color: var(--muted); }
+
+  /* ── Quiz sidebar ── */
+  .quiz-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; background: var(--bg3); border: 1px solid var(--border); margin-bottom: 10px; text-decoration: none; color: inherit; transition: all .2s; }
+  .quiz-item:hover { border-color: rgba(99,120,255,.4); }
+  .quiz-icon { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: .9rem; color: #fff; flex-shrink: 0; }
+  .quiz-info { flex: 1; }
+  .quiz-info-title { font-weight: 700; font-size: .87rem; }
+  .quiz-info-meta  { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+  /* ── Forum preview ── */
+  .forum-mini { display: flex; flex-direction: column; gap: 8px; }
+  .fm-item { padding: 12px 14px; border-radius: 10px; background: var(--bg3); border: 1px solid var(--border); cursor: pointer; text-decoration: none; color: inherit; transition: all .2s; display: block; }
+  .fm-item:hover { border-color: rgba(99,120,255,.3); }
+  .fm-title { font-size: .83rem; font-weight: 600; margin-bottom: 4px; }
+  .fm-meta  { font-size: .72rem; color: var(--muted); display: flex; gap: 10px; }
+
+  @media (max-width: 1024px) { .content-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+  <!-- MAIN -->
+  <div class="content-main">
+    <!-- Hero -->
+    <div class="course-hero">
+      <div class="course-hero-top">
+        <div class="course-big-icon">
+          {% if course.topic == 'python' %}🐍{% elif course.topic == 'web' %}🌐{% elif course.topic == 'data_science' %}📊{% else %}📚{% endif %}
+        </div>
+        <div>
+          <div class="course-h-title">{{ course.title }}</div>
+          <div class="course-h-desc">{{ course.description or 'Master this topic with hands-on lessons, exercises, and AI guidance.' }}</div>
+          <div class="course-hero-meta">
+            <span class="badge badge-blue">{{ course.topic|replace('_',' ')|capitalize }}</span>
+            {% if course.difficulty == 'beginner' %}<span class="badge badge-green">Beginner</span>
+            {% elif course.difficulty == 'intermediate' %}<span class="badge badge-yellow">Intermediate</span>
+            {% else %}<span class="badge badge-red">Advanced</span>{% endif %}
+            <span class="badge badge-purple"><i class="fa fa-clock"></i> {{ course.duration }} min</span>
+          </div>
+        </div>
+      </div>
+      <div class="progress-panel">
+        <div class="progress-label-row">
+          <span>Course progress</span>
+          <span>{{ progress.progress_percent if progress else 0 }}%</span>
+        </div>
+        <div class="progress-bar" style="height:8px;">
+          <div class="progress-fill" style="width:{{ progress.progress_percent if progress else 0 }}%;"></div>
+        </div>
+        {% if progress and progress.completed %}
+        <div style="margin-top:10px;" class="badge badge-green"><i class="fa fa-check-circle"></i> Completed · Score {{ progress.score|int }}%</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="card card-pad">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('content', this)">📖 Content</div>
+        <div class="tab" onclick="switchTab('lessons', this)">📋 Lessons</div>
+        <div class="tab" onclick="switchTab('discussion', this)">💬 Discussion</div>
+      </div>
+
+      <!-- Content tab -->
+      <div class="tab-panel active" id="tab-content">
+        <div class="content-body">
+          {% if course.content %}
+            {{ course.content|safe }}
+          {% else %}
+            <h2>Welcome to {{ course.title }}</h2>
+            <p>This course will guide you through the key concepts step by step. By the end, you'll have a solid understanding and practical experience to apply your skills.</p>
+            <h3>What you'll learn</h3>
+            <ul>
+              <li>Core concepts and fundamentals</li>
+              <li>Hands-on exercises and real examples</li>
+              <li>Best practices used by professionals</li>
+              <li>How to apply this in real-world projects</li>
+            </ul>
+            <h3>Prerequisites</h3>
+            <p>{{ 'No prior knowledge needed — this course starts from scratch.' if course.difficulty == 'beginner' else 'Some familiarity with programming concepts is helpful.' }}</p>
+            <blockquote>💡 Tip: Use the AI Tutor whenever you're stuck. Ask it to explain any concept in a different way!</blockquote>
+            <h2>Getting started</h2>
+            <p>Click through the <strong>Lessons</strong> tab to begin the structured curriculum. Each lesson builds on the previous one.</p>
+          {% endif %}
+        </div>
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="{{ url_for('chat') }}" class="btn btn-secondary"><i class="fa fa-robot"></i> Ask AI Tutor</a>
+          <button class="btn btn-primary" onclick="markProgress()"><i class="fa fa-check"></i> Mark Progress</button>
+        </div>
+      </div>
+
+      <!-- Lessons tab -->
+      <div class="tab-panel" id="tab-lessons">
+        <div class="lesson-list">
+          {% set lessons = [
+            ('Introduction & Setup', '8m'),
+            ('Core Concepts', '15m'),
+            ('Hands-on Practice', '20m'),
+            ('Advanced Topics', '18m'),
+            ('Project & Review', '12m')
+          ] %}
+          {% for title, dur in lessons %}
+          <div class="lesson-item {% if loop.index == 1 %}active{% endif %}">
+            <div class="lesson-num {% if loop.index == 1 %}current{% elif loop.index0 < (progress.progress_percent // 20 if progress else 0) %}done{% endif %}">
+              {% if loop.index0 < (progress.progress_percent // 20 if progress else 0) %}<i class="fa fa-check" style="font-size:.6rem;"></i>{% else %}{{ loop.index }}{% endif %}
+            </div>
+            <div class="lesson-title">{{ title }}</div>
+            <div class="lesson-dur"><i class="fa fa-clock" style="margin-right:3px;"></i>{{ dur }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Discussion tab -->
+      <div class="tab-panel" id="tab-discussion">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="font-weight:700;">Course Discussions</div>
+          <a href="{{ url_for('new_forum_post') }}" class="btn btn-primary btn-sm"><i class="fa fa-pen"></i> New Post</a>
+        </div>
+        <div class="forum-mini">
+          {% for post in posts %}
+          <a href="{{ url_for('forum_post', post_id=post.id) }}" class="fm-item">
+            <div class="fm-title">{{ post.title }}</div>
+            <div class="fm-meta">
+              <span><i class="fa fa-user"></i> {{ post.author.name }}</span>
+              <span><i class="fa fa-comments"></i> {{ post.comment_count() }}</span>
+              <span><i class="fa fa-clock"></i> {{ post.created_at.strftime('%b %d') }}</span>
+            </div>
+          </a>
+          {% else %}
+          <div style="text-align:center;padding:32px;color:var(--muted);font-size:.88rem;">
+            <i class="fa fa-comments" style="font-size:1.5rem;display:block;margin-bottom:8px;opacity:.4;"></i>
+            No discussions yet for this course.
+            <br /><a href="{{ url_for('new_forum_post') }}" style="color:var(--accent);">Start one</a>
+          </div>
+          {% endfor %}
+        </div>
+        <div style="margin-top:12px;"><a href="{{ url_for('forum') }}" class="sec-link" style="font-size:.82rem;color:var(--accent);text-decoration:none;">View all forum posts →</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div style="display:flex;flex-direction:column;gap:20px;position:sticky;top:80px;">
+    <!-- Quick info -->
+    <div class="card card-pad">
+      <div style="font-family:var(--font-head);font-weight:700;margin-bottom:16px;">Course Info</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:.85rem;">
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Duration</span><span>{{ course.duration }} minutes</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Level</span><span>{{ course.difficulty|capitalize }}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Topic</span><span>{{ course.topic|replace('_',' ')|capitalize }}</span></div>
+        {% if progress %}<div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Your score</span><span style="color:var(--accent);font-weight:700;">{{ progress.score|int }}%</span></div>{% endif %}
+      </div>
+      <div style="margin-top:20px;">
+        <a href="{{ url_for('chat') }}" class="btn btn-primary" style="width:100%;justify-content:center;"><i class="fa fa-robot"></i> Get AI Help</a>
+      </div>
+    </div>
+
+    <!-- Quizzes -->
+    {% if quizzes %}
+    <div class="card card-pad">
+      <div style="font-family:var(--font-head);font-weight:700;margin-bottom:16px;"><i class="fa fa-graduation-cap" style="color:var(--accent);margin-right:8px;"></i>Quizzes</div>
+      {% for quiz in quizzes %}
+      <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="quiz-item">
+        <div class="quiz-icon"><i class="fa fa-circle-question"></i></div>
+        <div class="quiz-info">
+          <div class="quiz-info-title">{{ quiz.title }}</div>
+          <div class="quiz-info-meta">{{ quiz.questions|length }} questions · {{ quiz.time_limit//60 }}m · Pass {{ quiz.pass_score }}%</div>
+        </div>
+        <i class="fa fa-chevron-right" style="color:var(--muted);font-size:.8rem;"></i>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Related -->
+    <div class="card card-pad">
+      <div style="font-family:var(--font-head);font-weight:700;margin-bottom:14px;"><i class="fa fa-wand-magic-sparkles" style="color:var(--accent);margin-right:8px;"></i>Up Next</div>
+      <div style="color:var(--muted);font-size:.85rem;line-height:1.7;">
+        Complete this course to unlock your next recommended learning module based on your profile.
+      </div>
+      <a href="{{ url_for('courses') }}" class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:14px;">Browse more courses</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(`tab-${name}`).classList.add('active');
+  }
+
+  async function markProgress() {
+    const current = {{ progress.progress_percent if progress else 0 }};
+    const next    = Math.min(100, current + 20);
+    try {
+      await fetch('/api/v1/progress', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ course_id: '{{ course.id }}', progress: next })
+      });
+      location.reload();
+    } catch(e) { alert('Could not save progress.'); }
+  }
+</script>
+{% endblock %}
